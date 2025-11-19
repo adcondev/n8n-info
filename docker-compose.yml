@@ -1,23 +1,29 @@
 services:
-  # ----------------------------------------------------------------
-  # CAPA DE DATOS (Stateful)
-  # Este servicio es crítico. Su ciclo de vida es independiente a n8n.
-  # ----------------------------------------------------------------
+  #################################################################
+  # SERVICIO 1: LA CAJA FUERTE (Base de Datos PostgreSQL)
+  # Aquí es donde vivirá toda la información de manera segura.
+  #################################################################
   postgres:
-    image: postgres:17-alpine
-    restart: unless-stopped
+    image: postgres:17-alpine  # Usamos la versión 'alpine' porque es muy ligera (ocupa poco espacio).
+    restart: unless-stopped    # Si falla, intenta revivir automáticamente.
+    
+    # Credenciales para crear la caja fuerte (vienen del archivo .env)
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
+    
+    # 💾 PERSISTENCIA: Esto es lo que evita que pase lo de Render.
+    # Mapeamos una carpeta virtual (volume) para que los datos sobrevivan al reinicio.
     volumes:
-      # Mapeo de Volumen: Host Path <-> Container Path
-      # Esto garantiza que si el contenedor se elimina, los datos quedan en el host.
       - postgres_data:/var/lib/postgresql/data
+    
+    # Red privada: Solo n8n necesita hablar con la base de datos, nadie más.
     networks:
       - n8n-internal
-    # Healthcheck: Mecanismo de defensa. Evita que n8n intente conectarse
-    # antes de que la base de datos esté lista para aceptar conexiones.
+    
+    # 🏥 SALUD: Verificación automática.
+    # Dokploy preguntará: "¿Estás lista base de datos?" antes de encender n8n.
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       start_period: 30s
@@ -25,59 +31,74 @@ services:
       timeout: 5s
       retries: 5
 
-  # ----------------------------------------------------------------
-  # CAPA DE APLICACIÓN (Stateless)
-  # Contiene la lógica de negocio y ejecución de workflows.
-  # ----------------------------------------------------------------
+  #################################################################
+  # SERVICIO 2: EL CEREBRO (n8n)
+  # La aplicación donde ella crea sus flujos.
+  #################################################################
   n8n:
     image: n8nio/n8n:latest
     restart: unless-stopped
+    
     environment:
-      # Configuración del driver de base de datos
+      # --- CONEXIÓN A LA BASE DE DATOS ---
+      # Le decimos a n8n: "No uses SQLite, usa la caja fuerte de arriba"
       - DB_TYPE=postgresdb
-      - DB_POSTGRESDB_HOST=postgres # Resolución DNS interna de Docker
+      - DB_POSTGRESDB_HOST=postgres    # Nombre del servicio de arriba
       - DB_POSTGRESDB_PORT=5432
       - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
       - DB_POSTGRESDB_USER=${POSTGRES_USER}
       - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
-
-      # Encryption Key: Fundamental para desencriptar credenciales almacenadas en la DB.
-      # Sin esto, la DB es inútil para ejecutar workflows autenticados.
+      
+      # --- SEGURIDAD (CRÍTICO) ---
+      # La llave para desencriptar las credenciales guardadas.
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
-
-      # Configuración del servicio
+      
+      # --- CONFIGURACIÓN GENERAL ---
       - N8N_HOST=${N8N_HOST}
       - N8N_PORT=5678
       - N8N_PROTOCOL=https
       - NODE_ENV=production
       - WEBHOOK_URL=https://${N8N_HOST}/
-      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
-
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE} # Importante para que los Cron (horarios) funcionen bien en Mazatlán.
+      - N8N_SECURE_COOKIE=false # A veces necesario si SSL lo maneja el proxy.
+      
+    # Guardamos archivos locales de n8n (no la DB, sino caché y configuraciones menores)
     volumes:
-      # Persistencia de assets locales y caché, no de datos críticos.
       - n8n_data:/home/node/.n8n
+      
+    # Redes:
+    # 1. n8n-internal: Para hablar con Postgres en secreto.
+    # 2. dokploy-network: Para salir a internet a través de Dokploy.
     networks:
-      - n8n-internal # Comunicación backend (DB)
-      - dokploy-network # Comunicación frontend (Traefik/Internet)
+      - n8n-internal
+      - dokploy-network
+    
+    # 🚦 ORDEN DE ARRANQUE:
+    # "No inicies n8n hasta que Postgres esté saludable".
     depends_on:
       postgres:
-        condition: service_healthy # Dependencia estricta basada en salud
+        condition: service_healthy
+        
+    # 🌐 TRAEFIK (El Tránsito):
+    # Estas etiquetas le dicen a Dokploy cómo enrutar el dominio "n8n.adcon.dev"
     labels:
-      # Integración con Traefik (Reverse Proxy) para terminación SSL automática
       - traefik.enable=true
-      - traefik.http.routers.n8n.rule=Host(`${N8N_HOST}`)
+      - traefik.http.routers.n8n.rule=Host(`n8n.adcon.dev`)
       - traefik.http.routers.n8n.entrypoints=websecure
       - traefik.http.routers.n8n.tls=true
       - traefik.http.routers.n8n.tls.certresolver=letsencrypt
       - traefik.http.services.n8n.loadbalancer.server.port=5678
       - traefik.docker.network=dokploy-network
 
+#################################################################
+# DEFINICIÓN DE INFRAESTRUCTURA
+#################################################################
 networks:
   n8n-internal:
-    driver: bridge # Aislamiento de red
+    driver: bridge   # Red privada interna
   dokploy-network:
-    external: true # Red compartida de infraestructura
+    external: true   # Red pública de Dokploy (ya debe existir)
 
 volumes:
-  n8n_data:
-  postgres_data: # Volumen nombrado gestionado por Docker
+  n8n_data:       # Espacio en disco para n8n
+  postgres_data:  # Espacio en disco para la DB (¡Lo más importante!)

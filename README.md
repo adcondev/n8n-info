@@ -133,6 +133,56 @@ Aunque Postgres es seguro, siempre es bueno tener un respaldo. Con esta configur
 
 -----
 
+## 🚀 Despliegue en Render
+
+Si deseas desplegar n8n en Render.com, sigue estos pasos:
+
+### 1. Crear Base de Datos PostgreSQL
+
+1. Ve a tu dashboard de Render y selecciona **"New +"** → **"PostgreSQL"**
+2. Dale un nombre (ejemplo: `n8n-database`)
+3. Selecciona el plan Free o Starter según tus necesidades
+4. Copia las credenciales de conexión (Internal Database URL)
+
+### 2. Desplegar n8n como Web Service
+
+1. Selecciona **"New +"** → **"Web Service"**
+2. En "Docker", usa la imagen: `n8nio/n8n:latest`
+3. Dale un nombre (ejemplo: `n8n-app`)
+
+### 3. Configurar Variables de Entorno
+
+En la sección de **Environment Variables**, agrega:
+
+```env
+DB_TYPE=postgresdb
+DB_POSTGRESDB_HOST=[tu-host-de-render]
+DB_POSTGRESDB_PORT=5432
+DB_POSTGRESDB_DATABASE=[nombre-db]
+DB_POSTGRESDB_USER=[usuario]
+DB_POSTGRESDB_PASSWORD=[password]
+N8N_ENCRYPTION_KEY=[genera-una-clave-segura]
+N8N_HOST=[tu-dominio.onrender.com]
+N8N_PORT=5678
+N8N_PROTOCOL=https
+WEBHOOK_URL=https://[tu-dominio.onrender.com]/
+GENERIC_TIMEZONE=America/Mazatlan
+NODE_ENV=production
+```
+
+> **⚠️ IMPORTANTE:** Genera `N8N_ENCRYPTION_KEY` con: `openssl rand -base64 32`
+> 
+> Si pierdes esta clave, perderás acceso a todas las credenciales guardadas en n8n.
+
+### 4. Desplegar y Verificar
+
+1. Haz clic en **"Create Web Service"**
+2. Espera a que el servicio esté en estado **"Live"**
+3. Accede a tu URL de Render y completa la configuración inicial de n8n
+4. ¡Guarda tu `N8N_ENCRYPTION_KEY` en un lugar seguro!
+
+-----
+
 ## 📂 Estructura de Archivos
 
   * `docker-compose.yml`: Define los servicios (n8n y Postgres) y cómo se conectan.
