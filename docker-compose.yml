@@ -221,6 +221,6 @@ volumes:
   # - Contenido: Workflows, credenciales, historial de ejecuciones, configuraciones
   # - ⚠️ CRÍTICO: Este es el volumen más importante - contiene TODOS tus datos
   # - Este volumen es LA SOLUCIÓN al problema de pérdida de datos de SQLite en Render
-  # - Ubicación física: Docker lo guarda en /var/lib/docker/volumes/ del servidor
+  # - Ubicación física: Docker típicamente lo guarda en /var/lib/docker/volumes/ del servidor (en instalaciones estándar de Linux), pero esta ubicación puede variar según la configuración de Docker, el sistema operativo, o si se usa Docker rootless.
   # - Backups: Para respaldar tu n8n, solo necesitas respaldar este volumen
   postgres_data:
