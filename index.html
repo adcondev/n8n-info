@@ -259,6 +259,114 @@
 
         <div class="section-divider"></div>
 
+        <!-- Why Everything Disappeared Section -->
+        <section class="mb-20">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl md:text-5xl font-bold mb-4">
+                    <i class="fas fa-fish text-blue-400 mr-3"></i>
+                    ¿Por qué desapareció todo?
+                </h2>
+                <p class="text-xl text-gray-400">El crimen de la "Memoria de Pez" en Render</p>
+            </div>
+
+            <!-- Render Problem Explanation -->
+            <div class="card rounded-xl p-8 mb-8">
+                <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                    <i class="fas fa-hotel text-yellow-400"></i>
+                    1. El problema de la "Memoria de Pez" (SQLite en Render)
+                </h3>
+                
+                <div class="space-y-6">
+                    <div>
+                        <h4 class="text-xl font-semibold text-blue-400 mb-3">El Escenario:</h4>
+                        <p class="text-gray-300 text-lg leading-relaxed">
+                            Render (y muchos servicios cloud) tratan a los contenedores como <strong class="text-red-400">efímeros</strong>. 
+                            Piensa en ellos como habitaciones de hotel.
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-xl font-semibold text-purple-400 mb-3">SQLite:</h4>
+                        <p class="text-gray-300 text-lg leading-relaxed">
+                            Es un archivo (<code class="bg-gray-800 px-2 py-1 rounded text-yellow-400">database.sqlite</code>) 
+                            que vive <em>dentro</em> de esa habitación.
+                        </p>
+                    </div>
+                    
+                    <div class="warning-box">
+                        <div class="flex items-start gap-4">
+                            <i class="fas fa-fire text-3xl text-red-400 flex-shrink-0"></i>
+                            <div>
+                                <h4 class="text-xl font-bold text-red-400 mb-2">El Desastre:</h4>
+                                <p class="text-gray-300 text-lg">
+                                    Cuando Render hace un "re-deploy" (actualización o reinicio), es como si hiciera el <em>checkout</em> 
+                                    del hotel y quemara la habitación. Todo lo que estaba adentro (el archivo SQLite con sus flujos y ejecuciones) 
+                                    se destruye. Se crea una habitación nueva, limpia y <strong class="text-red-400">vacía</strong>.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PostgreSQL Solution -->
+            <div class="card rounded-xl p-8 mb-8">
+                <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                    <i class="fas fa-shield-alt text-green-400"></i>
+                    2. La Solución: PostgreSQL (El Cerebro Externo)
+                </h3>
+                
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="bg-purple-900/20 border border-purple-600/30 rounded-lg p-6">
+                        <div class="text-4xl mb-3">🐘</div>
+                        <h4 class="text-lg font-bold text-purple-400 mb-2">Postgres</h4>
+                        <p class="text-gray-300">
+                            En lugar de guardar los datos dentro de la habitación (contenedor), contratamos una caja fuerte externa blindada.
+                        </p>
+                    </div>
+                    
+                    <div class="bg-blue-900/20 border border-blue-600/30 rounded-lg p-6">
+                        <div class="text-4xl mb-3">🔌</div>
+                        <h4 class="text-lg font-bold text-blue-400 mb-2">La Conexión</h4>
+                        <p class="text-gray-300">
+                            n8n (la aplicación) se conecta por un "cable" (red interna) a esta caja fuerte.
+                        </p>
+                    </div>
+                    
+                    <div class="bg-green-900/20 border border-green-600/30 rounded-lg p-6">
+                        <div class="text-4xl mb-3">✅</div>
+                        <h4 class="text-lg font-bold text-green-400 mb-2">El Resultado</h4>
+                        <p class="text-gray-300">
+                            Si n8n se reinicia, se actualiza o explota, no importa. Al volver a encenderse, se conecta a la caja fuerte y ahí está todo.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Encryption Key Warning -->
+            <div class="warning-box">
+                <div class="flex items-start gap-4">
+                    <i class="fas fa-key text-3xl text-yellow-400 flex-shrink-0"></i>
+                    <div>
+                        <h4 class="text-xl font-bold text-yellow-400 mb-3">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            3. La Llave Maestra (N8N_ENCRYPTION_KEY)
+                        </h4>
+                        <p class="text-gray-300 text-lg mb-3">
+                            Esta variable es la llave de la caja fuerte. Si reinstalan todo pero pierden esta clave, 
+                            <strong class="text-red-400">perderán el acceso a todas las credenciales</strong> (APIs, contraseñas) 
+                            guardadas en n8n, aunque tengan la base de datos.
+                        </p>
+                        <p class="text-yellow-300 text-xl font-bold text-center mt-4">
+                            ¡Guárdenla como oro!
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="section-divider"></div>
+
         <!-- The Solution Section -->
         <section class="mb-20">
             <div class="text-center mb-12">
@@ -592,6 +700,347 @@ graph TD
                             solo necesitas respaldar el volumen llamado <code class="bg-gray-800 px-2 py-1 rounded text-yellow-400">postgres_data</code> 
                             o usar <code class="bg-gray-800 px-2 py-1 rounded text-yellow-400">pg_dump</code> desde fuera.
                         </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <!-- Docker Compose Code Section -->
+        <section class="mb-20">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl md:text-5xl font-bold mb-4">
+                    <i class="fas fa-code text-blue-400 mr-3"></i>
+                    El Código Comentado
+                </h2>
+                <p class="text-xl text-gray-400">docker-compose.yml (Edición Educativa)</p>
+            </div>
+
+            <div class="card rounded-xl p-8 mb-8">
+                <p class="text-gray-300 text-lg mb-6 leading-relaxed">
+                    Este archivo está diseñado para <strong class="text-blue-400">Dokploy</strong>, que utiliza Traefik 
+                    para manejar el tráfico de internet. He añadido comentarios explicativos para que se entienda qué hace cada bloque.
+                </p>
+
+                <div class="terminal-header">
+                    <div class="terminal-dot dot-red"></div>
+                    <div class="terminal-dot dot-yellow"></div>
+                    <div class="terminal-dot dot-green"></div>
+                    <span class="text-gray-400 text-sm ml-2">docker-compose.yml</span>
+                </div>
+                <div class="bg-gray-900 rounded-b-lg p-6 overflow-x-auto border border-gray-700">
+                    <pre class="text-sm text-gray-300 font-mono leading-relaxed"><code>services:
+  #################################################################
+  # SERVICIO 1: LA CAJA FUERTE (Base de Datos PostgreSQL)
+  # Aquí es donde vivirá toda la información de manera segura.
+  #################################################################
+  postgres:
+    image: postgres:17-alpine  <span class="text-gray-500"># Usamos la versión 'alpine' porque es muy ligera.</span>
+    restart: unless-stopped    <span class="text-gray-500"># Si falla, intenta revivir automáticamente.</span>
+    
+    <span class="text-gray-500"># Credenciales para crear la caja fuerte (vienen del archivo .env)</span>
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    
+    <span class="text-green-400"># 💾 PERSISTENCIA: Esto es lo que evita que pase lo de Render.</span>
+    <span class="text-gray-500"># Mapeamos una carpeta virtual (volume) para que los datos sobrevivan.</span>
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    
+    <span class="text-gray-500"># Red privada: Solo n8n necesita hablar con la base de datos.</span>
+    networks:
+      - n8n-internal
+    
+    <span class="text-blue-400"># 🏥 SALUD: Verificación automática.</span>
+    <span class="text-gray-500"># Dokploy preguntará: "¿Estás lista base de datos?" antes de encender n8n.</span>
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      start_period: 30s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  #################################################################
+  # SERVICIO 2: EL CEREBRO (n8n)
+  # La aplicación donde ella crea sus flujos.
+  #################################################################
+  n8n:
+    image: n8nio/n8n:latest
+    restart: unless-stopped
+    
+    environment:
+      <span class="text-yellow-400"># --- CONEXIÓN A LA BASE DE DATOS ---</span>
+      <span class="text-gray-500"># Le decimos a n8n: "No uses SQLite, usa la caja fuerte de arriba"</span>
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres    <span class="text-gray-500"># Nombre del servicio de arriba</span>
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
+      - DB_POSTGRESDB_USER=${POSTGRES_USER}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+      
+      <span class="text-red-400"># --- SEGURIDAD (CRÍTICO) ---</span>
+      <span class="text-gray-500"># La llave para desencriptar las credenciales guardadas.</span>
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      
+      <span class="text-purple-400"># --- CONFIGURACIÓN GENERAL ---</span>
+      - N8N_HOST=${N8N_HOST}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - NODE_ENV=production
+      - WEBHOOK_URL=https://${N8N_HOST}/
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE} <span class="text-gray-500"># Para Cron (horarios) en Mazatlán.</span>
+      - N8N_SECURE_COOKIE=false <span class="text-gray-500"># A veces necesario si SSL lo maneja el proxy.</span>
+      
+    <span class="text-gray-500"># Guardamos archivos locales de n8n (no la DB, sino caché)</span>
+    volumes:
+      - n8n_data:/home/node/.n8n
+      
+    <span class="text-gray-500"># Redes:</span>
+    <span class="text-gray-500"># 1. n8n-internal: Para hablar con Postgres en secreto.</span>
+    <span class="text-gray-500"># 2. dokploy-network: Para salir a internet a través de Dokploy.</span>
+    networks:
+      - n8n-internal
+      - dokploy-network
+    
+    <span class="text-green-400"># 🚦 ORDEN DE ARRANQUE:</span>
+    <span class="text-gray-500"># "No inicies n8n hasta que Postgres esté saludable".</span>
+    depends_on:
+      postgres:
+        condition: service_healthy
+        
+    <span class="text-blue-400"># 🌐 TRAEFIK (El Tránsito):</span>
+    <span class="text-gray-500"># Estas etiquetas le dicen a Dokploy cómo enrutar el dominio</span>
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.n8n.rule=Host(`n8n.adcon.dev`)
+      - traefik.http.routers.n8n.entrypoints=websecure
+      - traefik.http.routers.n8n.tls=true
+      - traefik.http.routers.n8n.tls.certresolver=letsencrypt
+      - traefik.http.services.n8n.loadbalancer.server.port=5678
+      - traefik.docker.network=dokploy-network
+
+<span class="text-yellow-400">#################################################################
+# DEFINICIÓN DE INFRAESTRUCTURA
+#################################################################</span>
+networks:
+  n8n-internal:
+    driver: bridge   <span class="text-gray-500"># Red privada interna</span>
+  dokploy-network:
+    external: true   <span class="text-gray-500"># Red pública de Dokploy (ya debe existir)</span>
+
+volumes:
+  n8n_data:       <span class="text-gray-500"># Espacio en disco para n8n</span>
+  postgres_data:  <span class="text-green-400"># Espacio en disco para la DB (¡Lo más importante!)</span></code></pre>
+                </div>
+            </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <!-- .env File Section -->
+        <section class="mb-20">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl md:text-5xl font-bold mb-4">
+                    <i class="fas fa-file-alt text-green-400 mr-3"></i>
+                    El Archivo .env
+                </h2>
+                <p class="text-xl text-gray-400">Configuración de Variables (Secreto)</p>
+            </div>
+
+            <div class="card rounded-xl p-8 mb-8">
+                <div class="warning-box mb-6">
+                    <div class="flex items-start gap-4">
+                        <i class="fas fa-lock text-3xl text-red-400 flex-shrink-0"></i>
+                        <div>
+                            <h4 class="text-xl font-bold text-red-400 mb-2">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                Este archivo es secreto
+                            </h4>
+                            <p class="text-gray-300 text-lg">
+                                Nunca debe compartirse públicamente. Aquí definimos los valores reales.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="terminal-header">
+                    <div class="terminal-dot dot-red"></div>
+                    <div class="terminal-dot dot-yellow"></div>
+                    <div class="terminal-dot dot-green"></div>
+                    <span class="text-gray-400 text-sm ml-2">.env</span>
+                </div>
+                <div class="bg-gray-900 rounded-b-lg p-6 overflow-x-auto border border-gray-700">
+                    <pre class="text-sm text-gray-300 font-mono leading-relaxed"><code><span class="text-gray-500"># Dominio donde vivirá la app</span>
+N8N_HOST=n8n.adcon.dev
+N8N_PORT=5678
+
+<span class="text-gray-500"># Zona horaria (Muy importante para automatizaciones que corren a cierta hora)</span>
+GENERIC_TIMEZONE=America/Mazatlan
+
+<span class="text-gray-500"># Credenciales de la Base de Datos (El usuario y pass que usará Postgres)</span>
+POSTGRES_USER=alba_crooks
+POSTGRES_PASSWORD=jkhivqakg3m2zmzhw8v3hwzu
+POSTGRES_DB=n8n
+
+<span class="text-yellow-400"># ¡LA LLAVE MAESTRA! </span>
+<span class="text-gray-500"># Si pierdes esto, pierdes acceso a tus credenciales de Google/Slack/etc dentro de n8n.</span>
+N8N_ENCRYPTION_KEY=IsXnOohoz1UpSirWZfPrYD7YMp+UgLYHWS8+buDKJhgXyj9Mlb20B6eCBINEc6Sn7VSoquwdwAd5cF/dM4PUSw==</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <!-- Render Deployment Steps Section -->
+        <section class="mb-20">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl md:text-5xl font-bold mb-4">
+                    <i class="fas fa-cloud-upload-alt text-purple-400 mr-3"></i>
+                    Deploy en Render
+                </h2>
+                <p class="text-xl text-gray-400">Guía paso a paso para desplegar en Render.com</p>
+            </div>
+
+            <div class="card rounded-xl p-8 mb-8">
+                <div class="warning-box mb-6">
+                    <div class="flex items-start gap-4">
+                        <i class="fas fa-info-circle text-3xl text-blue-400 flex-shrink-0"></i>
+                        <div>
+                            <h4 class="text-xl font-bold text-blue-400 mb-2">Importante sobre Render</h4>
+                            <p class="text-gray-300 text-lg">
+                                Render es excelente para comenzar, pero debes usar una base de datos PostgreSQL externa 
+                                (Render Postgres o similar) para evitar la pérdida de datos. <strong class="text-yellow-400">Nunca uses SQLite en Render</strong>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 1: Create Postgres -->
+                <div class="mb-8">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center font-bold text-white">1</div>
+                        <h3 class="text-2xl font-bold">Crear Base de Datos PostgreSQL</h3>
+                    </div>
+                    <div class="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+                        <ol class="space-y-3 text-gray-300">
+                            <li class="flex items-start gap-3">
+                                <span class="text-purple-400 font-bold">1.</span>
+                                <span>Ve a tu dashboard de Render y selecciona <strong class="text-blue-400">"New +"</strong> → <strong class="text-blue-400">"PostgreSQL"</strong></span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-purple-400 font-bold">2.</span>
+                                <span>Dale un nombre (ejemplo: <code class="bg-gray-900 px-2 py-1 rounded text-yellow-400">n8n-database</code>)</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-purple-400 font-bold">3.</span>
+                                <span>Selecciona el plan Free o Starter según tus necesidades</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-purple-400 font-bold">4.</span>
+                                <span>Copia las credenciales de conexión (Internal Database URL)</span>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Step 2: Deploy n8n -->
+                <div class="mb-8">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white">2</div>
+                        <h3 class="text-2xl font-bold">Desplegar n8n como Web Service</h3>
+                    </div>
+                    <div class="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+                        <ol class="space-y-3 text-gray-300">
+                            <li class="flex items-start gap-3">
+                                <span class="text-blue-400 font-bold">1.</span>
+                                <span>Selecciona <strong class="text-blue-400">"New +"</strong> → <strong class="text-blue-400">"Web Service"</strong></span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-blue-400 font-bold">2.</span>
+                                <span>En "Docker", usa la imagen: <code class="bg-gray-900 px-2 py-1 rounded text-green-400">n8nio/n8n:latest</code></span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-blue-400 font-bold">3.</span>
+                                <span>Dale un nombre (ejemplo: <code class="bg-gray-900 px-2 py-1 rounded text-yellow-400">n8n-app</code>)</span>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Step 3: Environment Variables -->
+                <div class="mb-8">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center font-bold text-white">3</div>
+                        <h3 class="text-2xl font-bold">Configurar Variables de Entorno</h3>
+                    </div>
+                    <div class="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+                        <p class="text-gray-300 mb-4">En la sección de <strong class="text-blue-400">Environment Variables</strong>, agrega:</p>
+                        <div class="bg-gray-900 rounded-lg p-4 font-mono text-sm space-y-2">
+                            <div><span class="text-green-400">DB_TYPE</span>=<span class="text-yellow-300">postgresdb</span></div>
+                            <div><span class="text-green-400">DB_POSTGRESDB_HOST</span>=<span class="text-yellow-300">[tu-host-de-render]</span></div>
+                            <div><span class="text-green-400">DB_POSTGRESDB_PORT</span>=<span class="text-yellow-300">5432</span></div>
+                            <div><span class="text-green-400">DB_POSTGRESDB_DATABASE</span>=<span class="text-yellow-300">[nombre-db]</span></div>
+                            <div><span class="text-green-400">DB_POSTGRESDB_USER</span>=<span class="text-yellow-300">[usuario]</span></div>
+                            <div><span class="text-green-400">DB_POSTGRESDB_PASSWORD</span>=<span class="text-yellow-300">[password]</span></div>
+                            <div><span class="text-red-400">N8N_ENCRYPTION_KEY</span>=<span class="text-yellow-300">[genera-una-clave-segura]</span></div>
+                            <div><span class="text-green-400">N8N_HOST</span>=<span class="text-yellow-300">[tu-dominio.onrender.com]</span></div>
+                            <div><span class="text-green-400">N8N_PORT</span>=<span class="text-yellow-300">5678</span></div>
+                            <div><span class="text-green-400">N8N_PROTOCOL</span>=<span class="text-yellow-300">https</span></div>
+                            <div><span class="text-green-400">WEBHOOK_URL</span>=<span class="text-yellow-300">https://[tu-dominio.onrender.com]/</span></div>
+                            <div><span class="text-green-400">GENERIC_TIMEZONE</span>=<span class="text-yellow-300">America/Mazatlan</span></div>
+                            <div><span class="text-green-400">NODE_ENV</span>=<span class="text-yellow-300">production</span></div>
+                        </div>
+                        <div class="warning-box mt-4">
+                            <p class="text-yellow-300">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                <strong>Genera N8N_ENCRYPTION_KEY con:</strong> 
+                                <code class="bg-gray-900 px-2 py-1 rounded ml-2">openssl rand -base64 32</code>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Deploy -->
+                <div class="mb-8">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-yellow-600 flex items-center justify-center font-bold text-white">4</div>
+                        <h3 class="text-2xl font-bold">Desplegar y Verificar</h3>
+                    </div>
+                    <div class="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+                        <ol class="space-y-3 text-gray-300">
+                            <li class="flex items-start gap-3">
+                                <span class="text-yellow-400 font-bold">1.</span>
+                                <span>Haz clic en <strong class="text-blue-400">"Create Web Service"</strong></span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-yellow-400 font-bold">2.</span>
+                                <span>Espera a que el servicio esté en estado <strong class="text-green-400">"Live"</strong></span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-yellow-400 font-bold">3.</span>
+                                <span>Accede a tu URL de Render y completa la configuración inicial de n8n</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-yellow-400 font-bold">4.</span>
+                                <span>¡Guarda tu <code class="bg-gray-900 px-2 py-1 rounded text-red-400">N8N_ENCRYPTION_KEY</code> en un lugar seguro!</span>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="success-box">
+                    <div class="flex items-start gap-4">
+                        <i class="fas fa-check-circle text-3xl text-green-400 flex-shrink-0"></i>
+                        <div>
+                            <h4 class="text-xl font-bold text-green-400 mb-2">¡Listo para Producción! 🎉</h4>
+                            <p class="text-gray-300 text-lg">
+                                Tu instancia de n8n en Render ahora está conectada a PostgreSQL y tus datos están seguros. 
+                                Cada vez que Render reinicie el servicio, tus workflows y configuraciones permanecerán intactos.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
