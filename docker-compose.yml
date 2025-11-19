@@ -4,26 +4,56 @@ services:
   # Aquí es donde vivirá toda la información de manera segura.
   #################################################################
   postgres:
-    image: postgres:17-alpine  # Usamos la versión 'alpine' porque es muy ligera (ocupa poco espacio).
-    restart: unless-stopped    # Si falla, intenta revivir automáticamente.
+    # 📦 IMAGE: Especifica qué versión de PostgreSQL usar
+    # - postgres:17-alpine = Versión 17 de PostgreSQL en su variante "alpine"
+    # - "alpine" es una versión minimalista de Linux (ocupa ~5MB vs ~100MB de versiones completas)
+    # - Resultado: Base de datos potente pero que ocupa menos espacio en disco
+    image: postgres:17-alpine
     
-    # Credenciales para crear la caja fuerte (vienen del archivo .env)
+    # 🔄 RESTART: Define la política de reinicio del contenedor
+    # - unless-stopped = Si el contenedor falla o se detiene, Docker lo reiniciará automáticamente
+    # - EXCEPTO si tú lo detienes manualmente con "docker compose stop"
+    # - Garantiza que tu base de datos esté siempre disponible sin intervención manual
+    restart: unless-stopped
+    
+    # 🔐 ENVIRONMENT: Variables de entorno que configuran PostgreSQL al iniciar
+    # Estas variables le dicen a PostgreSQL cómo crear la base de datos inicial:
+    # - POSTGRES_USER: Nombre del superusuario que tendrá control total de la DB
+    # - POSTGRES_PASSWORD: Contraseña para ese usuario (NUNCA uses contraseñas débiles)
+    # - POSTGRES_DB: Nombre de la base de datos que se creará automáticamente
+    # El símbolo ${} toma los valores desde el archivo .env (para mantener secretos seguros)
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
     
-    # 💾 PERSISTENCIA: Esto es lo que evita que pase lo de Render.
-    # Mapeamos una carpeta virtual (volume) para que los datos sobrevivan al reinicio.
+    # 💾 VOLUMES: LA CLAVE DE LA PERSISTENCIA
+    # Esto es lo que SOLUCIONA el problema de pérdida de datos de SQLite en Render:
+    # - postgres_data = Nombre del volumen Docker (espacio en disco dedicado)
+    # - /var/lib/postgresql/data = Carpeta dentro del contenedor donde Postgres guarda TODO
+    # - El mapeo "postgres_data:/var/lib/postgresql/data" significa:
+    #   "Guarda los datos en el disco físico del servidor, NO dentro del contenedor"
+    # - Si el contenedor se destruye/reinicia, los datos SOBREVIVEN en el volumen
+    # - Análogo a conectar un disco duro externo: si cambias la computadora, tus archivos siguen ahí
     volumes:
       - postgres_data:/var/lib/postgresql/data
     
-    # Red privada: Solo n8n necesita hablar con la base de datos, nadie más.
+    # 🌐 NETWORKS: Red virtual privada para comunicación entre contenedores
+    # - n8n-internal = Red aislada donde solo viven n8n y PostgreSQL
+    # - Beneficio de seguridad: PostgreSQL NO es accesible desde internet directamente
+    # - Solo n8n puede "hablar" con la base de datos a través de esta red privada
+    # - Es como tener un túnel secreto entre dos edificios
     networks:
       - n8n-internal
     
-    # 🏥 SALUD: Verificación automática.
-    # Docker verificará que Postgres esté lista antes de iniciar n8n.
+    # 🏥 HEALTHCHECK: Verificación automática de que PostgreSQL está funcionando
+    # Docker ejecuta este comando periódicamente para saber si la base de datos está "saludable"
+    # - test: Comando que verifica si PostgreSQL responde (pg_isready = "¿estás lista?")
+    # - start_period: 30s = Espera 30 segundos antes de empezar a verificar (tiempo de arranque)
+    # - interval: 10s = Verifica cada 10 segundos si está funcionando
+    # - timeout: 5s = Si no responde en 5 segundos, marca como fallo
+    # - retries: 5 = Intenta 5 veces antes de declarar el contenedor como "no saludable"
+    # ¿Por qué es importante? n8n esperará a que este healthcheck sea exitoso antes de iniciar
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       start_period: 30s
@@ -36,56 +66,161 @@ services:
   # La aplicación donde creas tus flujos de trabajo.
   #################################################################
   n8n:
+    # 📦 IMAGE: La imagen oficial de n8n desde Docker Hub
+    # - n8nio/n8n:latest = Siempre usa la versión más reciente de n8n
+    # - "latest" se actualiza automáticamente cuando haces "docker compose pull"
+    # - Puedes especificar una versión fija (ej: n8nio/n8n:1.20.0) para mayor estabilidad
     image: n8nio/n8n:latest
+    
+    # 🔄 RESTART: Igual que PostgreSQL, reinicio automático en caso de fallo
+    # - unless-stopped = Si n8n crashea o falla, Docker lo reinicia automáticamente
+    # - Garantiza alta disponibilidad de tu servicio de automatización
     restart: unless-stopped
     
-    # Exponemos el puerto 5678 para acceder a n8n
+    # 🔌 PORTS: Mapeo de puertos para acceder a n8n desde tu navegador
+    # - Formato "puerto_host:puerto_contenedor"
+    # - "5678:5678" significa: 
+    #   * Puerto 5678 de tu servidor (izquierda) → Puerto 5678 dentro del contenedor (derecha)
+    # - Accederás a n8n escribiendo en tu navegador: http://tu-servidor:5678
+    # - El puerto de la izquierda puede cambiarse (ej: "8080:5678" para acceder en puerto 8080)
     ports:
       - "5678:5678"
     
+    # 🔐 ENVIRONMENT: Variables que configuran cómo funciona n8n
     environment:
       # --- CONEXIÓN A LA BASE DE DATOS ---
-      # Le decimos a n8n: "No uses SQLite, usa la caja fuerte de arriba"
+      # Estas variables le dicen a n8n: "NO uses SQLite, usa PostgreSQL"
+      
+      # DB_TYPE: Tipo de base de datos a usar
+      # - postgresdb = Le indica a n8n que use PostgreSQL en lugar de SQLite (default)
+      # - Esta es LA variable que previene la pérdida de datos en entornos efímeros
       - DB_TYPE=postgresdb
-      - DB_POSTGRESDB_HOST=postgres    # Nombre del servicio de arriba
+      
+      # DB_POSTGRESDB_HOST: Dirección donde está PostgreSQL
+      # - "postgres" = Nombre del servicio definido arriba (Docker resuelve este nombre automáticamente)
+      # - Docker hace "magia DNS": cuando n8n dice "postgres", Docker lo traduce a la IP del contenedor
+      # - NO necesitas conocer la IP real, solo usar el nombre del servicio
+      - DB_POSTGRESDB_HOST=postgres
+      
+      # DB_POSTGRESDB_PORT: Puerto donde PostgreSQL escucha conexiones
+      # - 5432 = Puerto estándar de PostgreSQL (por convención)
+      # - Comunicación INTERNA entre contenedores (no requiere exposición externa)
       - DB_POSTGRESDB_PORT=5432
+      
+      # DB_POSTGRESDB_DATABASE: Nombre de la base de datos a la que conectarse
+      # - Debe coincidir con POSTGRES_DB definido en el servicio postgres
+      # - n8n buscará esta base de datos específica dentro de PostgreSQL
       - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
+      
+      # DB_POSTGRESDB_USER: Usuario para autenticarse en PostgreSQL
+      # - Debe coincidir con POSTGRES_USER del servicio postgres
+      # - n8n usará estas credenciales para leer/escribir en la base de datos
       - DB_POSTGRESDB_USER=${POSTGRES_USER}
+      
+      # DB_POSTGRESDB_PASSWORD: Contraseña del usuario
+      # - Debe coincidir con POSTGRES_PASSWORD del servicio postgres
+      # - Nunca pongas contraseñas directamente aquí, usa siempre ${VARIABLE} desde .env
       - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
       
       # --- SEGURIDAD (CRÍTICO) ---
-      # La llave para desencriptar las credenciales guardadas.
+      
+      # N8N_ENCRYPTION_KEY: La llave maestra para encriptar/desencriptar credenciales
+      # - n8n guarda contraseñas de APIs (Google, Slack, etc.) ENCRIPTADAS en la base de datos
+      # - Esta clave es como la llave de una caja fuerte: sin ella, no puedes abrir nada
+      # - ⚠️ IMPORTANTE: Si pierdes esta clave, perderás acceso a TODAS las credenciales guardadas
+      # - Debe ser una cadena aleatoria larga y segura (generada con openssl rand -base64 32)
+      # - Guárdala en un gestor de contraseñas: sin ella, tu n8n queda inutilizable
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
       
       # --- CONFIGURACIÓN GENERAL ---
-      - N8N_HOST=${N8N_HOST}
-      - N8N_PORT=5678
-      - N8N_PROTOCOL=https
-      - NODE_ENV=production
-      - WEBHOOK_URL=https://${N8N_HOST}/
-      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE} # Importante para que los Cron (horarios) funcionen bien.
       
-    # Guardamos archivos locales de n8n (no la DB, sino caché y configuraciones menores)
+      # N8N_HOST: El dominio o dirección donde estará accesible n8n
+      # - Ejemplo: n8n.tudominio.com o la IP de tu servidor
+      # - Usado para generar URLs correctas en webhooks y notificaciones
+      - N8N_HOST=${N8N_HOST}
+      
+      # N8N_PORT: Puerto interno donde n8n escucha dentro del contenedor
+      # - 5678 = Puerto estándar de n8n (generalmente no necesitas cambiarlo)
+      # - Diferente del puerto expuesto en "ports:" (aunque aquí coinciden)
+      - N8N_PORT=5678
+      
+      # N8N_PROTOCOL: Protocolo para generar URLs (http o https)
+      # - https = Recomendado para producción (requiere certificado SSL/TLS)
+      # - Si usas un proxy reverso como Nginx o Caddy, ellos manejarán el HTTPS
+      - N8N_PROTOCOL=https
+      
+      # NODE_ENV: Modo de ejecución de la aplicación Node.js
+      # - production = Optimizaciones activadas, menos logs, mejor rendimiento
+      # - development = Más logs de depuración, recarga automática (solo para desarrollo)
+      - NODE_ENV=production
+      
+      # WEBHOOK_URL: URL base para los webhooks que n8n generará
+      # - Los webhooks son URLs donde servicios externos envían datos a n8n
+      # - Formato: https://tu-dominio/ (debe coincidir con N8N_HOST y N8N_PROTOCOL)
+      # - Ejemplo: Si un cliente paga en Stripe, Stripe llama a https://tu-dominio/webhook/stripe
+      - WEBHOOK_URL=https://${N8N_HOST}/
+      
+      # GENERIC_TIMEZONE: Zona horaria para ejecutar workflows con horarios específicos
+      # - Ejemplo: America/Mazatlan, Europe/Madrid, Asia/Tokyo
+      # - Crítico para Cron jobs: "ejecutar todos los días a las 9 AM" usará esta zona horaria
+      # - Lista completa: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
+      
+    # 💾 VOLUMES: Almacenamiento persistente para archivos locales de n8n
+    # - n8n_data = Volumen Docker para guardar configuraciones, cache, y archivos temporales
+    # - /home/node/.n8n = Carpeta dentro del contenedor donde n8n guarda sus archivos locales
+    # - Nota: La BASE DE DATOS está en PostgreSQL, aquí solo se guardan archivos auxiliares
+    # - Archivos incluidos: configuraciones de UI, cache de nodos, logs locales
     volumes:
       - n8n_data:/home/node/.n8n
       
-    # Red interna: Para hablar con Postgres de forma segura.
+    # 🌐 NETWORKS: Conecta n8n a la misma red privada que PostgreSQL
+    # - n8n-internal = Misma red definida en el servicio postgres
+    # - Esto permite que n8n y postgres "se vean" y puedan comunicarse
+    # - Sin esta red compartida, n8n no podría conectarse a la base de datos
     networks:
       - n8n-internal
     
-    # 🚦 ORDEN DE ARRANQUE:
-    # "No inicies n8n hasta que Postgres esté saludable".
+    # 🚦 DEPENDS_ON: Define el orden de inicio de los contenedores
+    # - postgres: condition: service_healthy = "No inicies n8n hasta que PostgreSQL esté saludable"
+    # - "saludable" significa que el healthcheck de postgres fue exitoso
+    # - Previene errores de conexión: n8n no intentará conectarse antes de que postgres esté lista
+    # - Si postgres falla el healthcheck, n8n nunca se iniciará (evita arranques corruptos)
     depends_on:
       postgres:
         condition: service_healthy
 
 #################################################################
 # DEFINICIÓN DE INFRAESTRUCTURA
+# Aquí se definen recursos compartidos: redes y volúmenes
 #################################################################
+
+# 🌐 NETWORKS: Redes virtuales para comunicación entre contenedores
 networks:
   n8n-internal:
-    driver: bridge   # Red privada interna para n8n y PostgreSQL
+    # DRIVER: Tipo de red que Docker creará
+    # - bridge = Red en modo "puente" (la más común para contenedores en un mismo host)
+    # - Funcionamiento: Crea una red privada aislada donde los contenedores pueden comunicarse
+    # - Los contenedores en esta red pueden "verse" por nombre (postgres, n8n) automáticamente
+    # - Docker actúa como un "switch virtual" conectando solo estos dos contenedores
+    # - Beneficio de seguridad: Esta red NO es accesible desde internet, solo entre contenedores
+    # - Análogo: Es como una red WiFi privada en tu casa, donde solo tus dispositivos se conectan
+    driver: bridge
 
+# 💾 VOLUMES: Espacios de almacenamiento persistente en el disco del servidor
+# Los volúmenes Docker son carpetas especiales que sobreviven a la destrucción de contenedores
 volumes:
-  n8n_data:       # Espacio en disco para n8n
-  postgres_data:  # Espacio en disco para la DB (¡Lo más importante!)
+  # n8n_data: Almacena archivos auxiliares de n8n (configuraciones, cache, logs)
+  # - Tamaño: Pequeño (~100-500 MB dependiendo del uso)
+  # - Contenido: Preferencias de UI, cache de nodos personalizados, archivos temporales
+  # - NO contiene la base de datos (esa está en postgres_data)
+  n8n_data:
+  
+  # postgres_data: Almacena TODA la base de datos de PostgreSQL
+  # - Tamaño: Variable (depende de cuántos workflows y ejecuciones tengas)
+  # - Contenido: Workflows, credenciales, historial de ejecuciones, configuraciones
+  # - ⚠️ CRÍTICO: Este es el volumen más importante - contiene TODOS tus datos
+  # - Este volumen es LA SOLUCIÓN al problema de pérdida de datos de SQLite en Render
+  # - Ubicación física: Docker lo guarda en /var/lib/docker/volumes/ del servidor
+  # - Backups: Para respaldar tu n8n, solo necesitas respaldar este volumen
+  postgres_data:
