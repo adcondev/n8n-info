@@ -656,13 +656,186 @@ N8N_ENCRYPTION_KEY=IsXnOohoz1UpSirWZfPrYD7YMp+UgLYHWS8+buDKJhgXyj9Mlb20B6eCBINEc
 
         <div class="section-divider"></div>
 
+        <!-- Docker Compose vs Render PostgreSQL Section -->
+        <section class="mb-20">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl md:text-5xl font-bold mb-4">
+                    <i class="fas fa-balance-scale text-purple-400 mr-3"></i>
+                    Dos Caminos, Una Solución
+                </h2>
+                <p class="text-xl text-gray-400">¿Por qué Docker Compose y Render PostgreSQL resuelven lo mismo?</p>
+            </div>
+
+            <div class="card rounded-xl p-8 mb-8">
+                <div class="success-box mb-8">
+                    <div class="flex items-start gap-4">
+                        <i class="fas fa-lightbulb text-3xl text-green-400 flex-shrink-0"></i>
+                        <div>
+                            <h4 class="text-xl font-bold text-green-400 mb-3">El Problema Central</h4>
+                            <p class="text-gray-300 text-lg leading-relaxed">
+                                Tanto <strong class="text-blue-400">Docker Compose con PostgreSQL</strong> como 
+                                <strong class="text-purple-400">Render con PostgreSQL como servicio</strong> solucionan 
+                                exactamente el mismo problema: <strong class="text-red-400">la pérdida de datos de SQLite en contenedores efímeros</strong>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="text-2xl font-bold mb-6 text-center gradient-text">La Solución es la Misma: Separación de Responsabilidades</h3>
+                
+                <div class="grid md:grid-cols-2 gap-8 mb-8">
+                    <!-- Docker Compose Approach -->
+                    <div class="bg-blue-900/20 border border-blue-600/30 rounded-lg p-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="text-4xl">🐳</div>
+                            <h4 class="text-2xl font-bold text-blue-400">Docker Compose</h4>
+                        </div>
+                        <p class="text-gray-300 text-lg mb-4 leading-relaxed">
+                            Creas <strong class="text-blue-400">dos contenedores separados</strong>:
+                        </p>
+                        <ul class="space-y-3 text-gray-300">
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-green-400 mt-1"></i>
+                                <span><strong class="text-red-400">n8n (Stateless)</strong>: Puede destruirse y recrearse</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-green-400 mt-1"></i>
+                                <span><strong class="text-blue-400">PostgreSQL (Stateful)</strong>: Guarda datos en un volumen Docker persistente</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-database text-yellow-400 mt-1"></i>
+                                <span>Los datos viven en el <strong>disco físico del servidor</strong> (/var/lib/docker/volumes/)</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Render Approach -->
+                    <div class="bg-purple-900/20 border border-purple-600/30 rounded-lg p-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="text-4xl">☁️</div>
+                            <h4 class="text-2xl font-bold text-purple-400">Render PostgreSQL</h4>
+                        </div>
+                        <p class="text-gray-300 text-lg mb-4 leading-relaxed">
+                            Creas <strong class="text-purple-400">dos servicios separados</strong>:
+                        </p>
+                        <ul class="space-y-3 text-gray-300">
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-green-400 mt-1"></i>
+                                <span><strong class="text-red-400">n8n Web Service (Stateless)</strong>: Puede reiniciarse sin perder datos</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-green-400 mt-1"></i>
+                                <span><strong class="text-purple-400">PostgreSQL Service (Stateful)</strong>: Servicio gestionado por Render</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-cloud text-yellow-400 mt-1"></i>
+                                <span>Los datos viven en la <strong>infraestructura de Render</strong> (separada de n8n)</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Key Insight -->
+                <div class="bg-gradient-to-r from-green-900/20 to-blue-900/20 border border-green-600/30 rounded-lg p-8">
+                    <div class="flex items-start gap-4">
+                        <i class="fas fa-key text-4xl text-yellow-400 flex-shrink-0"></i>
+                        <div>
+                            <h4 class="text-2xl font-bold text-yellow-400 mb-4">El Concepto Clave: Separación de Datos y Aplicación</h4>
+                            <p class="text-gray-200 text-lg leading-relaxed mb-4">
+                                En ambos casos, la solución es la misma:
+                            </p>
+                            <div class="grid md:grid-cols-3 gap-4 mb-4">
+                                <div class="bg-black/30 rounded-lg p-4 border border-gray-600">
+                                    <div class="text-3xl mb-2 text-center">📦</div>
+                                    <h5 class="font-bold text-blue-400 text-center mb-2">Aplicación</h5>
+                                    <p class="text-gray-300 text-sm text-center">n8n es <strong>efímero</strong> y puede reiniciarse sin consecuencias</p>
+                                </div>
+                                <div class="bg-black/30 rounded-lg p-4 border border-gray-600">
+                                    <div class="text-3xl mb-2 text-center">↔️</div>
+                                    <h5 class="font-bold text-green-400 text-center mb-2">Separación</h5>
+                                    <p class="text-gray-300 text-sm text-center">Se conectan por red, pero viven en <strong>lugares diferentes</strong></p>
+                                </div>
+                                <div class="bg-black/30 rounded-lg p-4 border border-gray-600">
+                                    <div class="text-3xl mb-2 text-center">💾</div>
+                                    <h5 class="font-bold text-purple-400 text-center mb-2">Base de Datos</h5>
+                                    <p class="text-gray-300 text-sm text-center">PostgreSQL es <strong>persistente</strong> y guarda todo de forma permanente</p>
+                                </div>
+                            </div>
+                            <div class="warning-box mt-4">
+                                <p class="text-yellow-200 text-lg font-semibold text-center">
+                                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                                    La magia no está en Docker o Render, está en usar <strong>PostgreSQL como servicio externo</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comparison Table -->
+            <div class="card rounded-xl p-8">
+                <h3 class="text-2xl font-bold mb-6 text-center">Comparación Lado a Lado</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b border-gray-600">
+                                <th class="py-4 px-4 text-gray-400 font-semibold">Aspecto</th>
+                                <th class="py-4 px-4 text-blue-400 font-semibold">Docker Compose</th>
+                                <th class="py-4 px-4 text-purple-400 font-semibold">Render PostgreSQL</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-300">
+                            <tr class="border-b border-gray-700">
+                                <td class="py-4 px-4 font-semibold">Dónde viven los datos</td>
+                                <td class="py-4 px-4">Volumen Docker en tu servidor</td>
+                                <td class="py-4 px-4">Infraestructura de Render (gestionada)</td>
+                            </tr>
+                            <tr class="border-b border-gray-700">
+                                <td class="py-4 px-4 font-semibold">Quién gestiona la DB</td>
+                                <td class="py-4 px-4">Tú (manualmente)</td>
+                                <td class="py-4 px-4">Render (automático)</td>
+                            </tr>
+                            <tr class="border-b border-gray-700">
+                                <td class="py-4 px-4 font-semibold">Backups</td>
+                                <td class="py-4 px-4">Debes configurarlos tú</td>
+                                <td class="py-4 px-4">Automáticos (según el plan)</td>
+                            </tr>
+                            <tr class="border-b border-gray-700">
+                                <td class="py-4 px-4 font-semibold">Escalabilidad</td>
+                                <td class="py-4 px-4">Limitada a tu servidor</td>
+                                <td class="py-4 px-4">Fácil escalado (cambiar plan)</td>
+                            </tr>
+                            <tr class="border-b border-gray-700">
+                                <td class="py-4 px-4 font-semibold">Problema que resuelve</td>
+                                <td class="py-4 px-4 text-green-400 font-bold">✅ Pérdida de datos SQLite</td>
+                                <td class="py-4 px-4 text-green-400 font-bold">✅ Pérdida de datos SQLite</td>
+                            </tr>
+                            <tr>
+                                <td class="py-4 px-4 font-semibold">Principio arquitectónico</td>
+                                <td class="py-4 px-4 text-yellow-400 font-bold">Separación App ↔ DB</td>
+                                <td class="py-4 px-4 text-yellow-400 font-bold">Separación App ↔ DB</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <div class="section-divider"></div>
+
         <!-- Footer Section -->
         <section class="text-center py-12">
             <div class="card rounded-xl p-12 inline-block">
-                <div class="text-6xl mb-6">🚀</div>
-                <h3 class="text-3xl font-bold mb-4 gradient-text">¡Tu arquitectura está lista!</h3>
-                <p class="text-xl text-gray-400 mb-6 max-w-2xl">
-                    Ahora tienes un sistema robusto, escalable y profesional para tus workflows de automatización
+                <div class="text-6xl mb-6">🎯</div>
+                <h3 class="text-3xl font-bold mb-4 gradient-text">Conclusión</h3>
+                <p class="text-xl text-gray-300 mb-6 max-w-3xl">
+                    No importa si usas <strong class="text-blue-400">Docker Compose</strong> en tu servidor 
+                    o <strong class="text-purple-400">PostgreSQL como servicio en Render</strong>: 
+                    ambos implementan el mismo patrón arquitectónico de <strong class="text-green-400">separación entre aplicación y datos</strong>.
+                </p>
+                <p class="text-lg text-gray-400 mb-8 max-w-3xl">
+                    La clave está en que PostgreSQL (la base de datos) viva <strong class="text-yellow-400">separada e independiente</strong> 
+                    de n8n (la aplicación). Así, cuando n8n se reinicia o actualiza, tus datos están seguros en otro lugar.
                 </p>
                 <div class="flex flex-wrap justify-center gap-4 mb-8">
                     <div class="flex items-center gap-2 bg-green-900/20 px-6 py-3 rounded-full border border-green-600/30">
@@ -671,7 +844,7 @@ N8N_ENCRYPTION_KEY=IsXnOohoz1UpSirWZfPrYD7YMp+UgLYHWS8+buDKJhgXyj9Mlb20B6eCBINEc
                     </div>
                     <div class="flex items-center gap-2 bg-blue-900/20 px-6 py-3 rounded-full border border-blue-600/30">
                         <i class="fas fa-shield-alt text-blue-400"></i>
-                        <span class="text-blue-300 font-semibold">Arquitectura segura</span>
+                        <span class="text-blue-300 font-semibold">Arquitectura resiliente</span>
                     </div>
                     <div class="flex items-center gap-2 bg-purple-900/20 px-6 py-3 rounded-full border border-purple-600/30">
                         <i class="fas fa-rocket text-purple-400"></i>
