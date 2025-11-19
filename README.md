@@ -138,3 +138,19 @@ Aunque Postgres es seguro, siempre es bueno tener un respaldo. Con esta configur
   * `docker-compose.yml`: Define los servicios (n8n y Postgres) y cómo se conectan.
   * `.env`: Guarda tus secretos (contraseñas, usuarios, dominios). **Nunca subas este archivo a GitHub**.
   * `.env.example`: Plantilla para saber qué variables necesitas configurar.
+  * `index.html`: Infografía web interactiva que visualiza esta arquitectura. [Ver en línea](https://adcondev.github.io/n8n-info/)
+
+-----
+
+## 🌐 Infografía Interactiva
+
+Este repositorio incluye una **infografía web interactiva** que visualiza de forma atractiva toda la arquitectura descrita aquí.
+
+**Ver la infografía:** [https://adcondev.github.io/n8n-info/](https://adcondev.github.io/n8n-info/)
+
+La infografía incluye:
+  * Diseño profesional en modo oscuro
+  * Diagramas interactivos con Mermaid.js
+  * Explicaciones visuales paso a paso
+  * Código de ejemplo con estilo terminal
+  * Totalmente responsive (móvil, tablet, desktop)
