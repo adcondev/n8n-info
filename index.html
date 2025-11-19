@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arquitectura n8n + PostgreSQL - Infografía Interactiva</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <!-- Mermaid.js -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'dark',
+            themeVariables: {
+                primaryColor: '#1e3a8a',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#3b82f6',
+                lineColor: '#10b981',
+                secondaryColor: '#1f2937',
+                tertiaryColor: '#374151'
+            }
+        });
+    </script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(90deg, #10b981 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.5);
+        }
+        
+        .icon-box {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
+        }
+        
+        .code-block {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            position: relative;
+            overflow-x: auto;
+        }
+        
+        .code-block::before {
+            content: '$ ';
+            color: #10b981;
+            font-weight: bold;
+        }
+        
+        .terminal-header {
+            background: #1e293b;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem 0.5rem 0 0;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .dot-red { background: #ef4444; }
+        .dot-yellow { background: #eab308; }
+        .dot-green { background: #10b981; }
+        
+        .warning-box {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid #ef4444;
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+        
+        .success-box {
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 4px solid #10b981;
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+        
+        .hero-pattern {
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+        }
+        
+        .section-divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent 0%, #10b981 50%, transparent 100%);
+            margin: 4rem 0;
+        }
+        
+        .pulse-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(16, 185, 129, 0.8);
+            }
+        }
+        
+        .mermaid {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 1rem;
+            padding: 2rem;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .scroll-hint {
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+    
+    <!-- Hero Section -->
+    <section class="hero-pattern min-h-screen flex items-center justify-center px-4 py-20">
+        <div class="max-w-5xl mx-auto text-center">
+            <div class="mb-8">
+                <i class="fas fa-server text-6xl gradient-text mb-4"></i>
+            </div>
+            <h1 class="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+                Arquitectura <span class="gradient-text">n8n + PostgreSQL</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-gray-400 mb-8 max-w-3xl mx-auto">
+                Por qué tu base de datos <span class="text-red-400 font-semibold">no debería</span> vivir en la <span class="text-blue-400 font-semibold">RAM</span> 💾
+            </p>
+            <p class="text-lg text-gray-500 mb-12 max-w-2xl mx-auto">
+                Una guía visual sobre cómo desplegar n8n con persistencia robusta, separación de responsabilidades y arquitectura profesional
+            </p>
+            <div class="scroll-hint">
+                <i class="fas fa-chevron-down text-3xl text-green-400"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content Container -->
+    <div class="max-w-6xl mx-auto px-4 py-12">
+        
+        <!-- The Problem Section -->
+        <section class="mb-20">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl md:text-5xl font-bold mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-400 mr-3"></i>
+                    El Problema
+                </h2>
+                <p class="text-xl text-gray-400">Contenedores "Sin Memoria" (Stateless)</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Problem Card 1 -->
+                <div class="card rounded-xl p-8">
+                    <div class="icon-box bg-gradient-to-br from-red-600 to-red-800">
+                        <i class="fas fa-trash-alt text-4xl text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-center text-red-400">El Error Común</h3>
+                    <p class="text-gray-300 text-lg leading-relaxed">
+                        Guardar la base de datos <strong class="text-red-400">dentro del contenedor</strong> es como guardar documentos importantes en la <strong class="text-yellow-400">memoria RAM</strong> de tu PC.
+                    </p>
+                    <div class="mt-6 p-4 bg-red-900/20 rounded-lg border border-red-600/30">
+                        <p class="text-red-300 text-center font-semibold">
+                            <i class="fas fa-power-off mr-2"></i>
+                            Si reinicias, se borra todo
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Problem Card 2 -->
+                <div class="card rounded-xl p-8">
+                    <div class="icon-box bg-gradient-to-br from-orange-600 to-orange-800">
+                        <i class="fas fa-clock text-4xl text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-center text-orange-400">Contenedores Efímeros</h3>
+                    <p class="text-gray-300 text-lg leading-relaxed">
+                        Por diseño, los contenedores Docker deben ser <strong class="text-orange-400">efímeros</strong>. Están hechos para ser <strong class="text-purple-400">destruidos y recreados</strong> en segundos.
+                    </p>
+                    <div class="mt-6 p-4 bg-orange-900/20 rounded-lg border border-orange-600/30">
+                        <p class="text-orange-300 text-center font-semibold">
+                            <i class="fas fa-sync-alt mr-2"></i>
+                            Por actualizaciones o errores
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="warning-box mt-8">
+                <div class="flex items-start gap-4">
+                    <i class="fas fa-exclamation-circle text-3xl text-red-400 flex-shrink-0"></i>
+                    <div>
+                        <h4 class="text-xl font-bold text-red-400 mb-2">Analogía: El Hotel vs. La RAM</h4>
+                        <p class="text-gray-300 text-lg">
+                            Si tu base de datos vive en el contenedor, es como hospedarse en un <strong>hotel sin maletas</strong>. 
+                            Cada vez que sales y vuelves, pierdes todas tus pertenencias. Los datos deben vivir en un lugar permanente: 
+                            <strong class="text-green-400">el disco físico</strong>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <!-- The Solution Section -->
+        <section class="mb-20">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl md:text-5xl font-bold mb-4">
+                    <i class="fas fa-lightbulb text-green-400 mr-3"></i>
+                    La Solución
+                </h2>
+                <p class="text-xl text-gray-400">Desacoplamiento de Servicios</p>
+            </div>
+            
+            <div class="success-box mb-8">
+                <div class="flex items-start gap-4">
+                    <i class="fas fa-check-circle text-3xl text-green-400 flex-shrink-0"></i>
+                    <div>
+                        <h4 class="text-xl font-bold text-green-400 mb-2">Separar el cerebro de la memoria</h4>
+                        <p class="text-gray-300 text-lg">
+                            Esta configuración separa las responsabilidades en componentes independientes y especializados,
+                            garantizando <strong class="text-green-400">estabilidad</strong>, <strong class="text-blue-400">rendimiento</strong> 
+                            y <strong class="text-purple-400">seguridad</strong>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Solution Card 1: Compute -->
+                <div class="card rounded-xl p-8 pulse-glow">
+                    <div class="icon-box">
+                        <i class="fas fa-rocket text-4xl text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-center text-blue-400">Cómputo (n8n)</h3>
+                    <p class="text-gray-300 text-lg leading-relaxed text-center">
+                        Procesa los flujos de trabajo. Si este contenedor se borra, <strong class="text-green-400">no pasa nada</strong>; 
+                        se crea uno nuevo idéntico.
+                    </p>
+                    <div class="mt-6 text-center">
+                        <span class="inline-block px-4 py-2 bg-red-600/20 rounded-full text-red-300 font-semibold">
+                            Stateless
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Solution Card 2: Storage -->
+                <div class="card rounded-xl p-8 pulse-glow">
+                    <div class="icon-box bg-gradient-to-br from-purple-600 to-purple-800">
+                        <i class="fas fa-database text-4xl text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-center text-purple-400">Almacenamiento (PostgreSQL)</h3>
+                    <p class="text-gray-300 text-lg leading-relaxed text-center">
+                        Una <strong class="text-purple-400">"caja fuerte"</strong> independiente que gestiona los datos de forma robusta.
+                    </p>
+                    <div class="mt-6 text-center">
+                        <span class="inline-block px-4 py-2 bg-green-600/20 rounded-full text-green-300 font-semibold">
+                            Stateful
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Solution Card 3: Persistence -->
+                <div class="card rounded-xl p-8 pulse-glow">
+                    <div class="icon-box bg-gradient-to-br from-green-600 to-green-800">
+                        <i class="fas fa-hdd text-4xl text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-center text-green-400">Persistencia (Volúmenes)</h3>
+                    <p class="text-gray-300 text-lg leading-relaxed text-center">
+                        El puente entre el mundo virtual de Docker y el <strong class="text-green-400">disco físico real</strong>, 
+                        asegurando que los datos sobrevivan.
+                    </p>
+                    <div class="mt-6 text-center">
+                        <span class="inline-block px-4 py-2 bg-blue-600/20 rounded-full text-blue-300 font-semibold">
+                            Permanente
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <!-- Architecture Diagram Section -->
+        <section class="mb-20">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl md:text-5xl font-bold mb-4">
+                    <i class="fas fa-project-diagram text-blue-400 mr-3"></i>
+                    Arquitectura del Sistema
+                </h2>
+                <p class="text-xl text-gray-400">Cómo se separan las "cajas" (servicios) para proteger tu información</p>
+            </div>
+            
+            <div class="card rounded-xl p-8 mb-8">
+                <pre class="mermaid">
+graph TD
+    subgraph SERVER ["Servidor / Docker Host"]
+        style SERVER fill:#f9f9f9,stroke:#333,stroke-width:2px
+        
+        subgraph NETWORK ["Red Interna Privada"]
+            style NETWORK fill:#e1f5fe,stroke:#0277bd,stroke-dasharray: 5 5
+            
+            N8N[("🚀 Contenedor n8n<br/>(Procesamiento / Stateless)")]
+            PG[("🐘 Contenedor PostgreSQL<br/>(Base de Datos / Stateful)")]
+        end
+
+        DISK[("💾 Disco Físico del Servidor<br/>(Volumen Docker)")]
+        
+        N8N -- "Lee/Escribe Datos (Puerto 5432)" --> PG
+        PG -- "Guarda Datos Permanentemente" --> DISK
+        
+        style N8N fill:#ff6b6b,stroke:#c0392b,color:white
+        style PG fill:#3498db,stroke:#2980b9,color:white
+        style DISK fill:#2ecc71,stroke:#27ae60,color:white
+    end
+    
+    INTERNET((Internet)) --> N8N
+                </pre>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-red-900/20 border border-red-600/30 rounded-lg p-6">
+                    <div class="text-4xl mb-3">🚀</div>
+                    <h4 class="text-lg font-bold text-red-400 mb-2">n8n (Stateless)</h4>
+                    <p class="text-gray-400 text-sm">Procesa workflows sin almacenar datos críticos</p>
+                </div>
+                <div class="bg-blue-900/20 border border-blue-600/30 rounded-lg p-6">
+                    <div class="text-4xl mb-3">🐘</div>
+                    <h4 class="text-lg font-bold text-blue-400 mb-2">PostgreSQL (Stateful)</h4>
+                    <p class="text-gray-400 text-sm">Base de datos robusta y segura</p>
+                </div>
+                <div class="bg-green-900/20 border border-green-600/30 rounded-lg p-6">
+                    <div class="text-4xl mb-3">💾</div>
+                    <h4 class="text-lg font-bold text-green-400 mb-2">Disco Físico</h4>
+                    <p class="text-gray-400 text-sm">Almacenamiento permanente en el host</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <!-- Quick Start Section -->
+        <section class="mb-20">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl md:text-5xl font-bold mb-4">
+                    <i class="fas fa-terminal text-green-400 mr-3"></i>
+                    Guía de Inicio Rápido
+                </h2>
+                <p class="text-xl text-gray-400">Despliega en minutos con estos pasos</p>
+            </div>
+            
+            <!-- Prerequisites -->
+            <div class="card rounded-xl p-8 mb-8">
+                <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                    <i class="fas fa-clipboard-check text-yellow-400"></i>
+                    Requisitos Previos
+                </h3>
+                <ul class="space-y-3 text-lg text-gray-300">
+                    <li class="flex items-start gap-3">
+                        <i class="fas fa-check text-green-400 mt-1"></i>
+                        <span>Docker y Docker Compose instalados en tu servidor</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i class="fas fa-check text-green-400 mt-1"></i>
+                        <span>Un dominio configurado apuntando a tu servidor (opcional, pero recomendado para webhooks)</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Step 1: Clone -->
+            <div class="card rounded-xl p-8 mb-8">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white">1</div>
+                    <h3 class="text-2xl font-bold">Clonar el repositorio</h3>
+                </div>
+                <div class="terminal-header">
+                    <div class="terminal-dot dot-red"></div>
+                    <div class="terminal-dot dot-yellow"></div>
+                    <div class="terminal-dot dot-green"></div>
+                    <span class="text-gray-400 text-sm ml-2">Terminal</span>
+                </div>
+                <div class="code-block">
+                    <code class="text-green-400 font-mono">git clone https://github.com/tu-usuario/tu-repo.git</code>
+                </div>
+                <div class="code-block mt-3">
+                    <code class="text-green-400 font-mono">cd tu-repo</code>
+                </div>
+            </div>
+            
+            <!-- Step 2: Configure -->
+            <div class="card rounded-xl p-8 mb-8">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center font-bold text-white">2</div>
+                    <h3 class="text-2xl font-bold">Configurar variables de entorno</h3>
+                </div>
+                <p class="text-gray-300 mb-4 text-lg">Copia el archivo de ejemplo para crear tu configuración real:</p>
+                <div class="terminal-header">
+                    <div class="terminal-dot dot-red"></div>
+                    <div class="terminal-dot dot-yellow"></div>
+                    <div class="terminal-dot dot-green"></div>
+                    <span class="text-gray-400 text-sm ml-2">Terminal</span>
+                </div>
+                <div class="code-block">
+                    <code class="text-green-400 font-mono">cp .env.example .env</code>
+                </div>
+                
+                <div class="warning-box mt-6">
+                    <div class="flex items-start gap-4">
+                        <i class="fas fa-key text-3xl text-yellow-400 flex-shrink-0"></i>
+                        <div>
+                            <h4 class="text-xl font-bold text-yellow-400 mb-3">⚠️ IMPORTANTE: N8N_ENCRYPTION_KEY</h4>
+                            <p class="text-gray-300 text-lg mb-3">
+                                Esta clave se usa para cifrar tus credenciales (Google, Slack, AWS, etc.).
+                            </p>
+                            <ul class="space-y-2 text-gray-300">
+                                <li class="flex items-start gap-2">
+                                    <i class="fas fa-shield-alt text-yellow-400 mt-1"></i>
+                                    <span>Genera una clave segura y <strong class="text-yellow-300">guárdala en un gestor de contraseñas</strong></span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <i class="fas fa-exclamation-triangle text-red-400 mt-1"></i>
+                                    <span>Si pierdes esta clave, perderás el acceso a todas las cuentas conectadas en n8n</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <p class="text-gray-300 mt-6 mb-4 text-lg">Genera una clave segura ejecutando esto en tu terminal:</p>
+                <div class="terminal-header">
+                    <div class="terminal-dot dot-red"></div>
+                    <div class="terminal-dot dot-yellow"></div>
+                    <div class="terminal-dot dot-green"></div>
+                    <span class="text-gray-400 text-sm ml-2">Terminal</span>
+                </div>
+                <div class="code-block">
+                    <code class="text-green-400 font-mono"># Opción A (si tienes openssl)</code>
+                </div>
+                <div class="code-block mt-1">
+                    <code class="text-green-400 font-mono">openssl rand -base64 24</code>
+                </div>
+                <div class="mt-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                    <p class="text-gray-400 text-sm">
+                        <i class="fas fa-info-circle text-blue-400 mr-2"></i>
+                        <strong>Opción B:</strong> Cualquier generador de contraseñas seguro funciona
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Step 3: Launch -->
+            <div class="card rounded-xl p-8 mb-8">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center font-bold text-white">3</div>
+                    <h3 class="text-2xl font-bold">Iniciar el servicio</h3>
+                </div>
+                <p class="text-gray-300 mb-4 text-lg">Arranca los contenedores en segundo plano:</p>
+                <div class="terminal-header">
+                    <div class="terminal-dot dot-red"></div>
+                    <div class="terminal-dot dot-yellow"></div>
+                    <div class="terminal-dot dot-green"></div>
+                    <span class="text-gray-400 text-sm ml-2">Terminal</span>
+                </div>
+                <div class="code-block">
+                    <code class="text-green-400 font-mono">docker compose up -d</code>
+                </div>
+                
+                <div class="success-box mt-6">
+                    <div class="flex items-start gap-4">
+                        <i class="fas fa-check-circle text-3xl text-green-400 flex-shrink-0"></i>
+                        <div>
+                            <h4 class="text-xl font-bold text-green-400 mb-2">¡Listo! 🎉</h4>
+                            <p class="text-gray-300 text-lg">
+                                Tu instancia de n8n estará disponible en <code class="bg-gray-800 px-2 py-1 rounded text-blue-400">https://tu-dominio.com</code>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Maintenance Section -->
+            <div class="card rounded-xl p-8">
+                <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                    <i class="fas fa-wrench text-orange-400"></i>
+                    Mantenimiento
+                </h3>
+                
+                <div class="space-y-6">
+                    <!-- View Logs -->
+                    <div>
+                        <h4 class="text-xl font-semibold text-blue-400 mb-3 flex items-center gap-2">
+                            <i class="fas fa-file-alt"></i>
+                            Ver logs (para depuración)
+                        </h4>
+                        <p class="text-gray-300 mb-3">Si algo falla, puedes ver qué está pasando dentro de los contenedores:</p>
+                        <div class="terminal-header">
+                            <div class="terminal-dot dot-red"></div>
+                            <div class="terminal-dot dot-yellow"></div>
+                            <div class="terminal-dot dot-green"></div>
+                            <span class="text-gray-400 text-sm ml-2">Terminal</span>
+                        </div>
+                        <div class="code-block">
+                            <code class="text-green-400 font-mono">docker compose logs -f</code>
+                        </div>
+                    </div>
+                    
+                    <!-- Update n8n -->
+                    <div>
+                        <h4 class="text-xl font-semibold text-purple-400 mb-3 flex items-center gap-2">
+                            <i class="fas fa-sync-alt"></i>
+                            Actualizar n8n
+                        </h4>
+                        <p class="text-gray-300 mb-3">Para obtener la última versión de n8n sin perder datos (gracias a esta arquitectura):</p>
+                        <div class="terminal-header">
+                            <div class="terminal-dot dot-red"></div>
+                            <div class="terminal-dot dot-yellow"></div>
+                            <div class="terminal-dot dot-green"></div>
+                            <span class="text-gray-400 text-sm ml-2">Terminal</span>
+                        </div>
+                        <div class="code-block">
+                            <code class="text-green-400 font-mono">docker compose pull</code>
+                        </div>
+                        <div class="code-block mt-1">
+                            <code class="text-green-400 font-mono">docker compose up -d</code>
+                        </div>
+                    </div>
+                    
+                    <!-- Backups -->
+                    <div>
+                        <h4 class="text-xl font-semibold text-green-400 mb-3 flex items-center gap-2">
+                            <i class="fas fa-save"></i>
+                            Copias de Seguridad (Backups)
+                        </h4>
+                        <p class="text-gray-300">
+                            Aunque Postgres es seguro, siempre es bueno tener un respaldo. Con esta configuración, 
+                            solo necesitas respaldar el volumen llamado <code class="bg-gray-800 px-2 py-1 rounded text-yellow-400">postgres_data</code> 
+                            o usar <code class="bg-gray-800 px-2 py-1 rounded text-yellow-400">pg_dump</code> desde fuera.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <!-- Footer Section -->
+        <section class="text-center py-12">
+            <div class="card rounded-xl p-12 inline-block">
+                <div class="text-6xl mb-6">🚀</div>
+                <h3 class="text-3xl font-bold mb-4 gradient-text">¡Tu arquitectura está lista!</h3>
+                <p class="text-xl text-gray-400 mb-6 max-w-2xl">
+                    Ahora tienes un sistema robusto, escalable y profesional para tus workflows de automatización
+                </p>
+                <div class="flex flex-wrap justify-center gap-4 mb-8">
+                    <div class="flex items-center gap-2 bg-green-900/20 px-6 py-3 rounded-full border border-green-600/30">
+                        <i class="fas fa-check-circle text-green-400"></i>
+                        <span class="text-green-300 font-semibold">Persistencia garantizada</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-blue-900/20 px-6 py-3 rounded-full border border-blue-600/30">
+                        <i class="fas fa-shield-alt text-blue-400"></i>
+                        <span class="text-blue-300 font-semibold">Arquitectura segura</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-purple-900/20 px-6 py-3 rounded-full border border-purple-600/30">
+                        <i class="fas fa-rocket text-purple-400"></i>
+                        <span class="text-purple-300 font-semibold">Listo para producción</span>
+                    </div>
+                </div>
+                <div class="text-gray-500 text-sm">
+                    <i class="fas fa-code mr-2"></i>
+                    Desarrollado con <span class="text-red-400">♥</span> usando Docker, PostgreSQL y n8n
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Scroll to top button -->
+    <button 
+        onclick="window.scrollTo({top: 0, behavior: 'smooth'})" 
+        class="fixed bottom-8 right-8 w-12 h-12 bg-gradient-to-br from-green-600 to-blue-600 rounded-full flex items-center justify-center shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-110 cursor-pointer"
+        style="z-index: 1000;"
+    >
+        <i class="fas fa-arrow-up text-white text-xl"></i>
+    </button>
+
+</body>
+</html>
