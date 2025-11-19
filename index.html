@@ -182,10 +182,10 @@
                 Arquitectura <span class="gradient-text">n8n + PostgreSQL</span>
             </h1>
             <p class="text-xl md:text-2xl text-gray-400 mb-8 max-w-3xl mx-auto">
-                Por qué tu base de datos <span class="text-red-400 font-semibold">no debería</span> vivir en la <span class="text-blue-400 font-semibold">RAM</span> 💾
+                El problema de <span class="text-red-400 font-semibold">SQLite en Render</span> y cómo <span class="text-green-400 font-semibold">PostgreSQL</span> lo soluciona 💾
             </p>
             <p class="text-lg text-gray-500 mb-12 max-w-2xl mx-auto">
-                Una guía visual sobre cómo desplegar n8n con persistencia robusta, separación de responsabilidades y arquitectura profesional
+                Una guía visual sobre por qué perdías tus datos en Render y cómo PostgreSQL garantiza su persistencia
             </p>
             <div class="scroll-hint">
                 <i class="fas fa-chevron-down text-3xl text-green-400"></i>
@@ -201,25 +201,26 @@
             <div class="text-center mb-12">
                 <h2 class="text-4xl md:text-5xl font-bold mb-4">
                     <i class="fas fa-exclamation-triangle text-red-400 mr-3"></i>
-                    El Problema
+                    El Problema: SQLite en Render
                 </h2>
-                <p class="text-xl text-gray-400">Contenedores "Sin Memoria" (Stateless)</p>
+                <p class="text-xl text-gray-400">¿Por qué desaparecían tus datos?</p>
             </div>
             
             <div class="grid md:grid-cols-2 gap-8">
                 <!-- Problem Card 1 -->
                 <div class="card rounded-xl p-8">
                     <div class="icon-box bg-gradient-to-br from-red-600 to-red-800">
-                        <i class="fas fa-trash-alt text-4xl text-white"></i>
+                        <i class="fas fa-database text-4xl text-white"></i>
                     </div>
-                    <h3 class="text-2xl font-bold mb-4 text-center text-red-400">El Error Común</h3>
+                    <h3 class="text-2xl font-bold mb-4 text-center text-red-400">SQLite en Render</h3>
                     <p class="text-gray-300 text-lg leading-relaxed">
-                        Guardar la base de datos <strong class="text-red-400">dentro del contenedor</strong> es como guardar documentos importantes en la <strong class="text-yellow-400">memoria RAM</strong> de tu PC.
+                        SQLite guarda los datos en un <strong class="text-yellow-400">archivo dentro del contenedor</strong>. 
+                        En Render, los contenedores son <strong class="text-red-400">efímeros</strong> - se destruyen con cada actualización.
                     </p>
                     <div class="mt-6 p-4 bg-red-900/20 rounded-lg border border-red-600/30">
                         <p class="text-red-300 text-center font-semibold">
-                            <i class="fas fa-power-off mr-2"></i>
-                            Si reinicias, se borra todo
+                            <i class="fas fa-fire mr-2"></i>
+                            Contenedor reinicia = Datos perdidos
                         </p>
                     </div>
                 </div>
@@ -227,16 +228,17 @@
                 <!-- Problem Card 2 -->
                 <div class="card rounded-xl p-8">
                     <div class="icon-box bg-gradient-to-br from-orange-600 to-orange-800">
-                        <i class="fas fa-clock text-4xl text-white"></i>
+                        <i class="fas fa-recycle text-4xl text-white"></i>
                     </div>
-                    <h3 class="text-2xl font-bold mb-4 text-center text-orange-400">Contenedores Efímeros</h3>
+                    <h3 class="text-2xl font-bold mb-4 text-center text-orange-400">Render Reinicia Siempre</h3>
                     <p class="text-gray-300 text-lg leading-relaxed">
-                        Por diseño, los contenedores Docker deben ser <strong class="text-orange-400">efímeros</strong>. Están hechos para ser <strong class="text-purple-400">destruidos y recreados</strong> en segundos.
+                        Render recrea los contenedores frecuentemente: por <strong class="text-orange-400">actualizaciones</strong>, 
+                        <strong class="text-purple-400">cambios de configuración</strong>, o simplemente por mantenimiento del servicio.
                     </p>
                     <div class="mt-6 p-4 bg-orange-900/20 rounded-lg border border-orange-600/30">
                         <p class="text-orange-300 text-center font-semibold">
-                            <i class="fas fa-sync-alt mr-2"></i>
-                            Por actualizaciones o errores
+                            <i class="fas fa-trash-alt mr-2"></i>
+                            Cada reinicio = SQLite se borra
                         </p>
                     </div>
                 </div>
@@ -246,11 +248,13 @@
                 <div class="flex items-start gap-4">
                     <i class="fas fa-exclamation-circle text-3xl text-red-400 flex-shrink-0"></i>
                     <div>
-                        <h4 class="text-xl font-bold text-red-400 mb-2">Analogía: El Hotel vs. La RAM</h4>
+                        <h4 class="text-xl font-bold text-red-400 mb-2">El Ciclo de Pérdida en Render</h4>
                         <p class="text-gray-300 text-lg">
-                            Si tu base de datos vive en el contenedor, es como hospedarse en un <strong>hotel sin maletas</strong>. 
-                            Cada vez que sales y vuelves, pierdes todas tus pertenencias. Los datos deben vivir en un lugar permanente: 
-                            <strong class="text-green-400">el disco físico</strong>.
+                            1. Despliegas n8n con SQLite en Render<br>
+                            2. Creas workflows y guardas credenciales<br>
+                            3. Render reinicia el contenedor (actualización, mantenimiento, etc.)<br>
+                            4. <strong class="text-red-400">Todo desaparece</strong> - el archivo SQLite se destruye<br>
+                            5. Vuelves a empezar desde cero 😢
                         </p>
                     </div>
                 </div>
@@ -372,72 +376,56 @@
             <div class="text-center mb-12">
                 <h2 class="text-4xl md:text-5xl font-bold mb-4">
                     <i class="fas fa-lightbulb text-green-400 mr-3"></i>
-                    La Solución
+                    La Solución: PostgreSQL
                 </h2>
-                <p class="text-xl text-gray-400">Desacoplamiento de Servicios</p>
+                <p class="text-xl text-gray-400">Persistencia garantizada, sin importar cuántas veces reinicie</p>
             </div>
             
             <div class="success-box mb-8">
                 <div class="flex items-start gap-4">
                     <i class="fas fa-check-circle text-3xl text-green-400 flex-shrink-0"></i>
                     <div>
-                        <h4 class="text-xl font-bold text-green-400 mb-2">Separar el cerebro de la memoria</h4>
+                        <h4 class="text-xl font-bold text-green-400 mb-2">PostgreSQL: La Caja Fuerte Externa</h4>
                         <p class="text-gray-300 text-lg">
-                            Esta configuración separa las responsabilidades en componentes independientes y especializados,
-                            garantizando <strong class="text-green-400">estabilidad</strong>, <strong class="text-blue-400">rendimiento</strong> 
-                            y <strong class="text-purple-400">seguridad</strong>.
+                            PostgreSQL guarda tus datos <strong class="text-green-400">fuera del contenedor de n8n</strong>, 
+                            ya sea en un volumen Docker persistente o como servicio independiente en Render.
+                            <strong class="text-blue-400">Tus datos sobreviven a cualquier reinicio</strong>.
                         </p>
                     </div>
                 </div>
             </div>
             
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Solution Card 1: Compute -->
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Solution Card 1: Container -->
                 <div class="card rounded-xl p-8 pulse-glow">
-                    <div class="icon-box">
-                        <i class="fas fa-rocket text-4xl text-white"></i>
+                    <div class="icon-box bg-gradient-to-br from-green-600 to-green-800">
+                        <i class="fas fa-box text-4xl text-white"></i>
                     </div>
-                    <h3 class="text-2xl font-bold mb-4 text-center text-blue-400">Cómputo (n8n)</h3>
+                    <h3 class="text-2xl font-bold mb-4 text-center text-green-400">Como Contenedor Docker</h3>
                     <p class="text-gray-300 text-lg leading-relaxed text-center">
-                        Procesa los flujos de trabajo. Si este contenedor se borra, <strong class="text-green-400">no pasa nada</strong>; 
-                        se crea uno nuevo idéntico.
-                    </p>
-                    <div class="mt-6 text-center">
-                        <span class="inline-block px-4 py-2 bg-red-600/20 rounded-full text-red-300 font-semibold">
-                            Stateless
-                        </span>
-                    </div>
-                </div>
-                
-                <!-- Solution Card 2: Storage -->
-                <div class="card rounded-xl p-8 pulse-glow">
-                    <div class="icon-box bg-gradient-to-br from-purple-600 to-purple-800">
-                        <i class="fas fa-database text-4xl text-white"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-4 text-center text-purple-400">Almacenamiento (PostgreSQL)</h3>
-                    <p class="text-gray-300 text-lg leading-relaxed text-center">
-                        Una <strong class="text-purple-400">"caja fuerte"</strong> independiente que gestiona los datos de forma robusta.
+                        Usando <strong class="text-green-400">docker-compose</strong>, PostgreSQL corre en un contenedor separado 
+                        con <strong class="text-blue-400">volúmenes persistentes</strong>. Los datos se guardan en el disco físico de tu servidor.
                     </p>
                     <div class="mt-6 text-center">
                         <span class="inline-block px-4 py-2 bg-green-600/20 rounded-full text-green-300 font-semibold">
-                            Stateful
+                            ✓ Datos Persistentes
                         </span>
                     </div>
                 </div>
                 
-                <!-- Solution Card 3: Persistence -->
+                <!-- Solution Card 2: Render Service -->
                 <div class="card rounded-xl p-8 pulse-glow">
-                    <div class="icon-box bg-gradient-to-br from-green-600 to-green-800">
-                        <i class="fas fa-hdd text-4xl text-white"></i>
+                    <div class="icon-box bg-gradient-to-br from-purple-600 to-purple-800">
+                        <i class="fas fa-cloud text-4xl text-white"></i>
                     </div>
-                    <h3 class="text-2xl font-bold mb-4 text-center text-green-400">Persistencia (Volúmenes)</h3>
+                    <h3 class="text-2xl font-bold mb-4 text-center text-purple-400">Como Servicio en Render</h3>
                     <p class="text-gray-300 text-lg leading-relaxed text-center">
-                        El puente entre el mundo virtual de Docker y el <strong class="text-green-400">disco físico real</strong>, 
-                        asegurando que los datos sobrevivan.
+                        Render ofrece <strong class="text-purple-400">PostgreSQL como servicio</strong> completamente independiente. 
+                        n8n se conecta a esta base de datos externa y <strong class="text-green-400">tus datos están siempre seguros</strong>.
                     </p>
                     <div class="mt-6 text-center">
-                        <span class="inline-block px-4 py-2 bg-blue-600/20 rounded-full text-blue-300 font-semibold">
-                            Permanente
+                        <span class="inline-block px-4 py-2 bg-purple-600/20 rounded-full text-purple-300 font-semibold">
+                            ✓ Separación Total
                         </span>
                     </div>
                 </div>
@@ -486,18 +474,18 @@ graph TD
             <div class="grid md:grid-cols-3 gap-6">
                 <div class="bg-red-900/20 border border-red-600/30 rounded-lg p-6">
                     <div class="text-4xl mb-3">🚀</div>
-                    <h4 class="text-lg font-bold text-red-400 mb-2">n8n (Stateless)</h4>
-                    <p class="text-gray-400 text-sm">Procesa workflows sin almacenar datos críticos</p>
+                    <h4 class="text-lg font-bold text-red-400 mb-2">n8n</h4>
+                    <p class="text-gray-400 text-sm">Puede reiniciarse sin perder datos</p>
                 </div>
                 <div class="bg-blue-900/20 border border-blue-600/30 rounded-lg p-6">
                     <div class="text-4xl mb-3">🐘</div>
-                    <h4 class="text-lg font-bold text-blue-400 mb-2">PostgreSQL (Stateful)</h4>
-                    <p class="text-gray-400 text-sm">Base de datos robusta y segura</p>
+                    <h4 class="text-lg font-bold text-blue-400 mb-2">PostgreSQL</h4>
+                    <p class="text-gray-400 text-sm">Base de datos externa persistente</p>
                 </div>
                 <div class="bg-green-900/20 border border-green-600/30 rounded-lg p-6">
                     <div class="text-4xl mb-3">💾</div>
-                    <h4 class="text-lg font-bold text-green-400 mb-2">Disco Físico</h4>
-                    <p class="text-gray-400 text-sm">Almacenamiento permanente en el host</p>
+                    <h4 class="text-lg font-bold text-green-400 mb-2">Volumen Docker</h4>
+                    <p class="text-gray-400 text-sm">Datos seguros en el disco físico</p>
                 </div>
             </div>
         </section>
@@ -712,15 +700,15 @@ graph TD
             <div class="text-center mb-12">
                 <h2 class="text-4xl md:text-5xl font-bold mb-4">
                     <i class="fas fa-code text-blue-400 mr-3"></i>
-                    El Código Comentado
+                    El Código Simplificado
                 </h2>
-                <p class="text-xl text-gray-400">docker-compose.yml (Edición Educativa)</p>
+                <p class="text-xl text-gray-400">docker-compose.yml - Solo n8n + PostgreSQL</p>
             </div>
 
             <div class="card rounded-xl p-8 mb-8">
                 <p class="text-gray-300 text-lg mb-6 leading-relaxed">
-                    Este archivo está diseñado para <strong class="text-blue-400">Dokploy</strong>, que utiliza Traefik 
-                    para manejar el tráfico de internet. He añadido comentarios explicativos para que se entienda qué hace cada bloque.
+                    Este archivo despliega <strong class="text-blue-400">n8n + PostgreSQL</strong> de forma simple, 
+                    sin proxies reversos ni complejidades adicionales. Solo dos servicios: n8n y la base de datos.
                 </p>
 
                 <div class="terminal-header">
@@ -731,31 +719,27 @@ graph TD
                 </div>
                 <div class="bg-gray-900 rounded-b-lg p-6 overflow-x-auto border border-gray-700">
                     <pre class="text-sm text-gray-300 font-mono leading-relaxed"><code>services:
-  #################################################################
-  # SERVICIO 1: LA CAJA FUERTE (Base de Datos PostgreSQL)
-  # Aquí es donde vivirá toda la información de manera segura.
-  #################################################################
+  <span class="text-yellow-400">#################################################################
+  # SERVICIO 1: PostgreSQL (La solución al problema de SQLite)
+  #################################################################</span>
   postgres:
-    image: postgres:17-alpine  <span class="text-gray-500"># Usamos la versión 'alpine' porque es muy ligera.</span>
-    restart: unless-stopped    <span class="text-gray-500"># Si falla, intenta revivir automáticamente.</span>
+    image: postgres:17-alpine
+    restart: unless-stopped
     
-    <span class="text-gray-500"># Credenciales para crear la caja fuerte (vienen del archivo .env)</span>
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
     
-    <span class="text-green-400"># 💾 PERSISTENCIA: Esto es lo que evita que pase lo de Render.</span>
-    <span class="text-gray-500"># Mapeamos una carpeta virtual (volume) para que los datos sobrevivan.</span>
+    <span class="text-green-400"># 💾 CLAVE: Volumen persistente</span>
+    <span class="text-gray-500"># Los datos se guardan en el disco, NO en el contenedor</span>
     volumes:
       - postgres_data:/var/lib/postgresql/data
     
-    <span class="text-gray-500"># Red privada: Solo n8n necesita hablar con la base de datos.</span>
     networks:
       - n8n-internal
     
-    <span class="text-blue-400"># 🏥 SALUD: Verificación automática.</span>
-    <span class="text-gray-500"># Dokploy preguntará: "¿Estás lista base de datos?" antes de encender n8n.</span>
+    <span class="text-gray-500"># Verificación de salud</span>
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       start_period: 30s
@@ -763,77 +747,58 @@ graph TD
       timeout: 5s
       retries: 5
 
-  #################################################################
-  # SERVICIO 2: EL CEREBRO (n8n)
-  # La aplicación donde ella crea sus flujos.
-  #################################################################
+  <span class="text-yellow-400">#################################################################
+  # SERVICIO 2: n8n (La aplicación)
+  #################################################################</span>
   n8n:
     image: n8nio/n8n:latest
     restart: unless-stopped
     
+    <span class="text-gray-500"># Puerto expuesto para acceder a n8n</span>
+    ports:
+      - "5678:5678"
+    
     environment:
-      <span class="text-yellow-400"># --- CONEXIÓN A LA BASE DE DATOS ---</span>
-      <span class="text-gray-500"># Le decimos a n8n: "No uses SQLite, usa la caja fuerte de arriba"</span>
+      <span class="text-red-400"># Configuración para usar PostgreSQL (NO SQLite)</span>
       - DB_TYPE=postgresdb
-      - DB_POSTGRESDB_HOST=postgres    <span class="text-gray-500"># Nombre del servicio de arriba</span>
+      - DB_POSTGRESDB_HOST=postgres
       - DB_POSTGRESDB_PORT=5432
       - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
       - DB_POSTGRESDB_USER=${POSTGRES_USER}
       - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
       
-      <span class="text-red-400"># --- SEGURIDAD (CRÍTICO) ---</span>
-      <span class="text-gray-500"># La llave para desencriptar las credenciales guardadas.</span>
+      <span class="text-yellow-400"># Llave de encriptación (¡Guárdala!)</span>
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
       
-      <span class="text-purple-400"># --- CONFIGURACIÓN GENERAL ---</span>
+      <span class="text-gray-500"># Configuración general</span>
       - N8N_HOST=${N8N_HOST}
       - N8N_PORT=5678
       - N8N_PROTOCOL=https
       - NODE_ENV=production
       - WEBHOOK_URL=https://${N8N_HOST}/
-      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE} <span class="text-gray-500"># Para Cron (horarios) en Mazatlán.</span>
-      - N8N_SECURE_COOKIE=false <span class="text-gray-500"># A veces necesario si SSL lo maneja el proxy.</span>
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
       
-    <span class="text-gray-500"># Guardamos archivos locales de n8n (no la DB, sino caché)</span>
     volumes:
       - n8n_data:/home/node/.n8n
       
-    <span class="text-gray-500"># Redes:</span>
-    <span class="text-gray-500"># 1. n8n-internal: Para hablar con Postgres en secreto.</span>
-    <span class="text-gray-500"># 2. dokploy-network: Para salir a internet a través de Dokploy.</span>
     networks:
       - n8n-internal
-      - dokploy-network
     
-    <span class="text-green-400"># 🚦 ORDEN DE ARRANQUE:</span>
-    <span class="text-gray-500"># "No inicies n8n hasta que Postgres esté saludable".</span>
+    <span class="text-gray-500"># Espera a que PostgreSQL esté lista</span>
     depends_on:
       postgres:
         condition: service_healthy
-        
-    <span class="text-blue-400"># 🌐 TRAEFIK (El Tránsito):</span>
-    <span class="text-gray-500"># Estas etiquetas le dicen a Dokploy cómo enrutar el dominio</span>
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.n8n.rule=Host(`n8n.adcon.dev`)
-      - traefik.http.routers.n8n.entrypoints=websecure
-      - traefik.http.routers.n8n.tls=true
-      - traefik.http.routers.n8n.tls.certresolver=letsencrypt
-      - traefik.http.services.n8n.loadbalancer.server.port=5678
-      - traefik.docker.network=dokploy-network
 
 <span class="text-yellow-400">#################################################################
-# DEFINICIÓN DE INFRAESTRUCTURA
+# INFRAESTRUCTURA
 #################################################################</span>
 networks:
   n8n-internal:
-    driver: bridge   <span class="text-gray-500"># Red privada interna</span>
-  dokploy-network:
-    external: true   <span class="text-gray-500"># Red pública de Dokploy (ya debe existir)</span>
+    driver: bridge
 
 volumes:
-  n8n_data:       <span class="text-gray-500"># Espacio en disco para n8n</span>
-  postgres_data:  <span class="text-green-400"># Espacio en disco para la DB (¡Lo más importante!)</span></code></pre>
+  n8n_data:
+  postgres_data:  <span class="text-green-400"># ¡Datos persistentes aquí!</span></code></pre>
                 </div>
             </div>
         </section>

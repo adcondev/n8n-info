@@ -23,7 +23,7 @@ services:
       - n8n-internal
     
     # 🏥 SALUD: Verificación automática.
-    # Dokploy preguntará: "¿Estás lista base de datos?" antes de encender n8n.
+    # Docker verificará que Postgres esté lista antes de iniciar n8n.
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       start_period: 30s
@@ -33,11 +33,15 @@ services:
 
   #################################################################
   # SERVICIO 2: EL CEREBRO (n8n)
-  # La aplicación donde ella crea sus flujos.
+  # La aplicación donde creas tus flujos de trabajo.
   #################################################################
   n8n:
     image: n8nio/n8n:latest
     restart: unless-stopped
+    
+    # Exponemos el puerto 5678 para acceder a n8n
+    ports:
+      - "5678:5678"
     
     environment:
       # --- CONEXIÓN A LA BASE DE DATOS ---
@@ -59,45 +63,28 @@ services:
       - N8N_PROTOCOL=https
       - NODE_ENV=production
       - WEBHOOK_URL=https://${N8N_HOST}/
-      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE} # Importante para que los Cron (horarios) funcionen bien en Mazatlán.
-      - N8N_SECURE_COOKIE=false # A veces necesario si SSL lo maneja el proxy.
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE} # Importante para que los Cron (horarios) funcionen bien.
       
     # Guardamos archivos locales de n8n (no la DB, sino caché y configuraciones menores)
     volumes:
       - n8n_data:/home/node/.n8n
       
-    # Redes:
-    # 1. n8n-internal: Para hablar con Postgres en secreto.
-    # 2. dokploy-network: Para salir a internet a través de Dokploy.
+    # Red interna: Para hablar con Postgres de forma segura.
     networks:
       - n8n-internal
-      - dokploy-network
     
     # 🚦 ORDEN DE ARRANQUE:
     # "No inicies n8n hasta que Postgres esté saludable".
     depends_on:
       postgres:
         condition: service_healthy
-        
-    # 🌐 TRAEFIK (El Tránsito):
-    # Estas etiquetas le dicen a Dokploy cómo enrutar el dominio "n8n.adcon.dev"
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.n8n.rule=Host(`n8n.adcon.dev`)
-      - traefik.http.routers.n8n.entrypoints=websecure
-      - traefik.http.routers.n8n.tls=true
-      - traefik.http.routers.n8n.tls.certresolver=letsencrypt
-      - traefik.http.services.n8n.loadbalancer.server.port=5678
-      - traefik.docker.network=dokploy-network
 
 #################################################################
 # DEFINICIÓN DE INFRAESTRUCTURA
 #################################################################
 networks:
   n8n-internal:
-    driver: bridge   # Red privada interna
-  dokploy-network:
-    external: true   # Red pública de Dokploy (ya debe existir)
+    driver: bridge   # Red privada interna para n8n y PostgreSQL
 
 volumes:
   n8n_data:       # Espacio en disco para n8n

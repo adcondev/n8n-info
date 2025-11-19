@@ -1,28 +1,35 @@
 # Despliegue de n8n con Base de Datos PostgreSQL
 
-Este repositorio contiene una configuración de **Docker Compose** para desplegar **n8n** conectándolo a una base de datos **PostgreSQL** externa.
+Este repositorio contiene una configuración de **Docker Compose** para desplegar **n8n** conectándolo a una base de datos **PostgreSQL**.
 
-Esta arquitectura está diseñada para solucionar el problema de la "pérdida de datos" común en despliegues simples, garantizando estabilidad, rendimiento y seguridad mediante la separación de responsabilidades.
+Esta arquitectura está diseñada para solucionar el problema de la **"pérdida de datos"** que ocurre cuando se usa **SQLite en servicios como Render**, garantizando persistencia y estabilidad mediante el uso de PostgreSQL.
 
 -----
 
-## 🧠 Conceptos Clave: ¿Por qué hacer esto?
+## 🧠 El Problema: SQLite en Render
 
-Si vienes de usar n8n en servicios básicos o con su configuración por defecto, probablemente usabas **SQLite** (una base de datos que vive dentro de un archivo).
+Si usabas **SQLite** en servicios como Render, probablemente experimentaste **pérdida de datos**. Esto ocurre porque:
 
-### 1\. El Problema: Contenedores "Sin Memoria" (Stateless)
+### El Problema con SQLite en Contenedores Efímeros
 
-Por diseño, los contenedores Docker deben ser **efímeros**. Están hechos para ser destruidos y recreados en segundos (por actualizaciones o errores).
+**SQLite** es una base de datos que vive en un archivo dentro del contenedor. En servicios como **Render**, los contenedores son **efímeros** (se destruyen y recrean con cada actualización o reinicio).
 
-  * **El error común:** Guardar la base de datos dentro del contenedor es como guardar documentos importantes en la memoria RAM de tu PC. Si reinicias, se borra todo.
+  * **El error:** SQLite guarda los datos dentro del contenedor
+  * **El resultado:** Cuando Render reinicia el servicio, el contenedor se destruye y **todos los datos se pierden**
+  * **La analogía:** Es como guardar documentos importantes en la memoria RAM - si reinicias, se borra todo
 
-### 2\. La Solución: Desacoplamiento de Servicios
+### La Solución: PostgreSQL
 
-Esta configuración separa el cerebro de la memoria:
+**PostgreSQL** soluciona este problema porque:
 
-  * **Cómputo (n8n):** Procesa los flujos de trabajo. Si este contenedor se borra, no pasa nada; se crea uno nuevo idéntico.
-  * **Almacenamiento (PostgreSQL):** Una "caja fuerte" independiente que gestiona los datos de forma robusta.
-  * **Persistencia (Volúmenes):** Es el puente entre el mundo virtual de Docker y el disco físico real de tu servidor, asegurando que los datos sobrevivan a cualquier reinicio.
+  * **Como contenedor Docker:** Los datos se guardan en volúmenes persistentes que sobreviven a los reinicios
+  * **Como servicio en Render:** La base de datos es completamente independiente del contenedor de n8n
+  * **Resultado:** Tus workflows, credenciales y ejecuciones están siempre seguros
+
+Esta configuración separa la aplicación de los datos:
+
+  * **n8n (Stateless):** Procesa los flujos de trabajo. Puede reiniciarse sin perder información.
+  * **PostgreSQL (Stateful):** Guarda todos los datos de forma permanente y segura.
 
 -----
 
@@ -105,6 +112,8 @@ Arranca los contenedores en segundo plano:
 ```bash
 docker compose up -d
 ```
+
+Accede a n8n en `http://localhost:5678` o en tu dominio configurado.
 
 -----
 
