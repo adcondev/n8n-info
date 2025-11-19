@@ -6,7 +6,7 @@ services:
   postgres:
     # 📦 IMAGE: Especifica qué versión de PostgreSQL usar
     # - postgres:17-alpine = Versión 17 de PostgreSQL en su variante "alpine"
-    # - "alpine" es una versión minimalista de Linux (ocupa ~5MB vs ~100MB de versiones completas)
+    # - "alpine" es una versión minimalista de Linux (la capa base ocupa ~5MB vs ~100MB de versiones completas, pero la imagen completa de PostgreSQL es más grande)
     # - Resultado: Base de datos potente pero que ocupa menos espacio en disco
     image: postgres:17-alpine
     
